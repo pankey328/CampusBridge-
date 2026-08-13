@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #00ED64;
+  --color-brand-primary-hover: #00C853;
+  --color-bg-dark: #0A192F;
+  --color-bg-card: #112240;
+  --color-bg-input: #1C3052;
+  --color-text-primary: #CCD6F6;
+  --color-text-secondary: #8892B0;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+/* Glassmorphism */
+.glass-panel {
+  background: rgba(17, 34, 64, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
