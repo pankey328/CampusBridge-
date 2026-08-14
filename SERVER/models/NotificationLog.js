@@ -15,6 +15,10 @@ const notificationLogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    content: {
+      type: String,
+      required: true,
+    },
     type: {
       type: String,
       enum: ["WELCOME", "HR_ACTIVATION", "INTERVIEW_SCHEDULED", "REASSIGNED"],

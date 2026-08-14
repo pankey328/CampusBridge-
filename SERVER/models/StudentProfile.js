@@ -8,6 +8,16 @@ const studentProfileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     rollNumber: {
       type: String,
       required: true,
@@ -17,12 +27,12 @@ const studentProfileSchema = new mongoose.Schema(
     },
     branch: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
     },
     cgpa: {
       type: Number,
-      required: true,
+      default: 0,
       min: 0,
       max: 10,
     },
@@ -33,7 +43,7 @@ const studentProfileSchema = new mongoose.Schema(
     },
     passoutYear: {
       type: Number,
-      required: true,
+      default: new Date().getFullYear(),
     },
     skills: {
       type: [String],

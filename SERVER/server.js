@@ -38,7 +38,12 @@ app.use("/api/hr", hrRoutes);
 
 mongoose
   .connect(url)
-  .then(() => console.log(`DATABASE Connected`))
+  .then(() => {
+    console.log(`DATABASE Connected`);
+    
+    const { startEmailWorker } = require("./workers/emailQueueRunner");
+    startEmailWorker();
+  })
   .catch((error) => console.log(`Database Error:`, error));
 
 app.listen(port, () => {
