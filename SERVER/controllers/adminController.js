@@ -6,13 +6,17 @@ const { generateActivationToken } = require("../utils/cryptoUtils");
 // Get All HRs
 exports.getAllHRs = async (req, res) => {
   try {
-    const { status } = req.query; // PENDING / ACTIVE
+    const { status } = req.query; // PENDING / ACTIVE / INACTIVE
 
     const query = { role: "HR" };
     if (status === "PENDING") {
       query.isApproved = false;
     } else if (status === "ACTIVE") {
       query.isApproved = true;
+      query.status = "ACTIVE";
+    } else if (status === "INACTIVE") {
+      query.isApproved = true;
+      query.status = "INACTIVE";
     }
 
     const users = await User.find(query).select("email status isApproved");
@@ -20,9 +24,13 @@ exports.getAllHRs = async (req, res) => {
 
     const HRProfile = require("../models/HRProfile");
     const profiles = await HRProfile.find({ userId: { $in: userIds } });
+    
+    const companyNames = profiles.map(p => p.companyName);
+    const companies = await Company.find({ name: { $in: companyNames } });
 
     const hrs = profiles.map(profile => {
       const user = users.find(u => u._id.toString() === profile.userId.toString());
+      const company = companies.find(c => c.name === profile.companyName);
       return {
         id: user._id,
         email: user.email,
@@ -31,6 +39,10 @@ exports.getAllHRs = async (req, res) => {
         companyName: profile.companyName,
         designation: profile.designation,
         phone: profile.phone,
+        linkedinUrl: profile.linkedinUrl || "",
+        industry: company?.industry || "",
+        website: company?.website || "",
+        gstin: company?.gstin || "",
       };
     });
 
@@ -39,6 +51,47 @@ exports.getAllHRs = async (req, res) => {
       .json({ message: "Hr Data fetched successfully", data: hrs });
   } catch (error) {
     console.error("Get All HRs Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Get HR By Id
+exports.getHRById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password -activationTokenHash -resetPasswordOtp");
+    if (!user || user.role !== "HR") return res.status(404).json({ message: "HR not found" });
+
+    const HRProfile = require("../models/HRProfile");
+    const profile = await HRProfile.findOne({ userId: user._id })
+      .populate("createdBy", "email role")
+      .populate("updatedBy", "email role");
+    
+    let company = null;
+    if (profile) {
+      company = await Company.findOne({ name: profile.companyName });
+    }
+
+    const hrData = {
+      id: user._id,
+      email: user.email,
+      status: user.status,
+      isApproved: user.isApproved,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      companyName: profile?.companyName,
+      designation: profile?.designation,
+      phone: profile?.phone,
+      linkedinUrl: profile?.linkedinUrl || "",
+      industry: company?.industry || "",
+      website: company?.website || "",
+      gstin: company?.gstin || "",
+      createdBy: profile?.createdBy ? { email: profile.createdBy.email, role: profile.createdBy.role } : null,
+      updatedBy: profile?.updatedBy ? { email: profile.updatedBy.email, role: profile.updatedBy.role } : null
+    };
+
+    res.status(200).json({ message: "HR Data fetched successfully", data: hrData });
+  } catch (error) {
+    console.error("Get HR By Id Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -140,19 +193,32 @@ const csv = require("csvtojson");
 const StudentProfile = require("../models/StudentProfile");
 const NotificationLog = require("../models/NotificationLog");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 
 // Bulk Import (Validation Only)
 exports.bulkImportDryRun = async (req, res) => {
   try {
     let jsonArray = [];
 
-    if (req.files && req.files.file) {
+    if (req.body.sheetUrl) {
+      try {
+        const match = req.body.sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (!match) return res.status(400).json({ message: "Invalid Google Sheet URL" });
+        const sheetId = match[1];
+        const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        
+        const response = await axios.get(exportUrl);
+        jsonArray = await csv().fromString(response.data);
+      } catch (error) {
+        return res.status(400).json({ message: "Failed to fetch data from Google Sheet. Ensure the link is public." });
+      }
+    } else if (req.files && req.files.file) {
       const fileBuffer = req.files.file.data;
       jsonArray = await csv().fromString(fileBuffer.toString('utf8'));
     } else if (req.body.students) {
       jsonArray = typeof req.body.students === 'string' ? JSON.parse(req.body.students) : req.body.students;
     } else {
-      return res.status(400).json({ message: "No CSV file or JSON data provided" });
+      return res.status(400).json({ message: "No CSV file, JSON data, or Google Sheet URL provided" });
     }
 
     const validStudents = [];
@@ -283,6 +349,7 @@ exports.bulkImportCommit = async (req, res) => {
           rollNumber: student.enrollmentNumber,
           branch: student.department || "",
           passoutYear: student.graduationYear || new Date().getFullYear(),
+          createdBy: req.user.id,
         });
         await newProfile.save({ session });
 
@@ -330,7 +397,7 @@ exports.bulkImportCommit = async (req, res) => {
 // Add HR Manually
 exports.addHRManually = async (req, res) => {
   try {
-    const { email, companyName, designation, phone, linkedinUrl } = req.body;
+    const { email, companyName, designation, phone, linkedinUrl, industry, website, gstin } = req.body;
 
     if (!email || !companyName || !designation || !phone) {
       return res.status(400).json({ message: "Please provide all required fields." });
@@ -371,7 +438,19 @@ exports.addHRManually = async (req, res) => {
 
     const existingCompany = await Company.findOne({ name: companyName });
     if (!existingCompany) {
-      await Company.create({ name: companyName, isApproved: true });
+      await Company.create({ 
+        name: companyName, 
+        isApproved: true,
+        industry: industry || "",
+        website: website || "",
+        gstin: gstin || "",
+      });
+    } else {
+      if (industry) existingCompany.industry = industry;
+      if (website) existingCompany.website = website;
+      if (gstin) existingCompany.gstin = gstin;
+      existingCompany.isApproved = true;
+      await existingCompany.save();
     }
 
     const activationLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${newUser._id}`;
@@ -389,6 +468,105 @@ exports.addHRManually = async (req, res) => {
     res.status(201).json({ message: "HR added successfully and activation email sent." });
   } catch (error) {
     console.error("Add HR Manual Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Update HR
+exports.updateHR = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { companyName, designation, phone, linkedinUrl, email, industry, website, gstin } = req.body;
+
+    const user = await User.findById(id);
+    if (!user || user.role !== "HR") return res.status(404).json({ message: "HR not found" });
+
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) return res.status(400).json({ message: "Email already in use." });
+      user.email = email;
+      await user.save();
+    }
+
+    const HRProfile = require("../models/HRProfile");
+    const profile = await HRProfile.findOne({ userId: id });
+    if (profile) {
+      profile.companyName = companyName || profile.companyName;
+      profile.designation = designation || profile.designation;
+      profile.phone = phone || profile.phone;
+      profile.linkedinUrl = linkedinUrl !== undefined ? linkedinUrl : profile.linkedinUrl;
+      profile.updatedBy = req.user.id;
+      await profile.save();
+
+      // Company details update
+      if (companyName) {
+        let existingCompany = await Company.findOne({ name: companyName });
+        if (!existingCompany) {
+          existingCompany = await Company.create({ 
+            name: companyName, 
+            isApproved: true,
+            industry: industry || "",
+            website: website || "",
+            gstin: gstin || ""
+          });
+        } else {
+          if (industry) existingCompany.industry = industry;
+          if (website) existingCompany.website = website;
+          if (gstin) existingCompany.gstin = gstin;
+          await existingCompany.save();
+        }
+      }
+    }
+
+    res.status(200).json({ message: "HR updated successfully." });
+  } catch (error) {
+    console.error("Update HR Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Soft Delete HR
+exports.softDeleteHR = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "HR not found" });
+    
+    user.status = "INACTIVE";
+    await user.save();
+    
+    res.status(200).json({ message: "HR moved to inactive (Soft Deleted)." });
+  } catch (error) {
+    console.error("Soft Delete HR Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Hard Delete HR
+exports.hardDeleteHR = async (req, res) => {
+  try {
+    const HRProfile = require("../models/HRProfile");
+    await HRProfile.findOneAndDelete({ userId: req.params.id });
+    await User.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ message: "HR permanently deleted." });
+  } catch (error) {
+    console.error("Hard Delete HR Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Restore HR
+exports.restoreHR = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "HR not found" });
+    
+    user.status = "ACTIVE";
+    await user.save();
+    
+    res.status(200).json({ message: "HR restored successfully." });
+  } catch (error) {
+    console.error("Restore HR Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -429,6 +607,7 @@ exports.addStudentManually = async (req, res) => {
       rollNumber,
       branch: branch || "",
       passoutYear: passoutYear || new Date().getFullYear(),
+      createdBy: req.user.id,
     });
     await newProfile.save();
 
@@ -497,6 +676,45 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
+// Get Student By Id
+exports.getStudentById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password -activationTokenHash -resetPasswordOtp");
+    if (!user || user.role !== "STUDENT") return res.status(404).json({ message: "Student not found" });
+
+    const StudentProfile = require("../models/StudentProfile");
+    const profile = await StudentProfile.findOne({ userId: user._id })
+      .populate("createdBy", "email role")
+      .populate("updatedBy", "email role");
+
+    const studentData = {
+      id: user._id,
+      email: user.email,
+      status: user.status,
+      isApproved: user.isApproved,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      firstName: profile?.firstName,
+      lastName: profile?.lastName,
+      rollNumber: profile?.rollNumber,
+      branch: profile?.branch,
+      passoutYear: profile?.passoutYear,
+      cgpa: profile?.cgpa,
+      activeBacklogs: profile?.activeBacklogs,
+      skills: profile?.skills || [],
+      resumeUrl: profile?.resumeUrl || "",
+      isLocked: profile?.isLocked,
+      createdBy: profile?.createdBy ? { email: profile.createdBy.email, role: profile.createdBy.role } : null,
+      updatedBy: profile?.updatedBy ? { email: profile.updatedBy.email, role: profile.updatedBy.role } : null
+    };
+
+    res.status(200).json({ message: "Student Data fetched successfully", data: studentData });
+  } catch (error) {
+    console.error("Get Student By Id Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
 // Update Student
 exports.updateStudent = async (req, res) => {
   try {
@@ -525,6 +743,7 @@ exports.updateStudent = async (req, res) => {
       profile.rollNumber = rollNumber || profile.rollNumber;
       profile.branch = branch || profile.branch;
       profile.passoutYear = passoutYear || profile.passoutYear;
+      profile.updatedBy = req.user.id;
       await profile.save();
     }
 
@@ -544,7 +763,7 @@ exports.softDeleteStudent = async (req, res) => {
     user.status = "INACTIVE";
     await user.save();
     
-    // lock student profile so they cannot apply for jobs
+    // lock student profile
     await StudentProfile.findOneAndUpdate({ userId: user._id }, { isLocked: true });
 
     res.status(200).json({ message: "Student moved to inactive (Soft Deleted)." });

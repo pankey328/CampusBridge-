@@ -106,7 +106,7 @@ exports.setupPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     user.password = hashedPassword;
-    user.status = "ACTIVE"; // Fully activated!
+    user.status = "ACTIVE"; 
 
     user.activationTokenHash = null;
     user.activationTokenExpires = null;
@@ -234,6 +234,12 @@ exports.changePassword = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
+    if (user.mustChangePassword) {
+      user.mustChangePassword = false;
+    }
+    if (user.status === "PENDING") {
+      user.status = "ACTIVE";
+    }
     await user.save();
 
     res.status(200).json({ message: "Password updated successfully!" });

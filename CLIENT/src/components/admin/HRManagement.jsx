@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, CheckCircle, XCircle, Trash2, Save, X } from 'lucide-react';
+import { Search, Plus, CheckCircle, XCircle, Trash2, Save, X, Building2, User, Mail, Phone, Briefcase, Link as LinkIcon, FileText, Edit2, RefreshCw, Eye } from 'lucide-react';
 import api from '../../services/api';
 
 const HRManagement = () => {
@@ -9,8 +9,12 @@ const HRManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedHrId, setSelectedHrId] = useState(null);
+  const [selectedHr, setSelectedHr] = useState(null);
+  const [viewData, setViewData] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   
   const [formData, setFormData] = useState({
@@ -19,6 +23,9 @@ const HRManagement = () => {
     designation: '',
     phone: '',
     linkedinUrl: '',
+    industry: '',
+    website: '',
+    gstin: '',
   });
 
   const getAuthHeader = () => ({
@@ -58,7 +65,7 @@ const HRManagement = () => {
     try {
       await api.post('/admin/hr/manual', formData, getAuthHeader());
       setShowAddModal(false);
-      setFormData({ companyName: '', email: '', designation: '', phone: '', linkedinUrl: '' });
+      setFormData({ companyName: '', email: '', designation: '', phone: '', linkedinUrl: '', industry: '', website: '', gstin: '' });
 
       fetchHRs();
     } catch (error) {
@@ -90,6 +97,73 @@ const HRManagement = () => {
     }
   };
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/admin/hr/${selectedHr.id}`, formData, getAuthHeader());
+      setShowEditModal(false);
+      fetchHRs();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to update HR");
+    }
+  };
+
+  const openEditModal = (hr) => {
+    setSelectedHr(hr);
+    setFormData({
+      companyName: hr.companyName || '',
+      email: hr.email || '',
+      designation: hr.designation || '',
+      phone: hr.phone || '',
+      linkedinUrl: hr.linkedinUrl || '',
+      industry: hr.industry || '',
+      website: hr.website || '',
+      gstin: hr.gstin || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleView = async (id) => {
+    try {
+      const { data } = await api.get(`/admin/hr/${id}`, getAuthHeader());
+      setViewData(data.data);
+      setShowViewModal(true);
+    } catch (error) {
+      alert("Failed to fetch HR details");
+    }
+  };
+
+  const handleSoftDelete = async (id) => {
+    if(window.confirm("Are you sure you want to deactivate this HR? They won't be able to log in.")) {
+      try {
+        await api.put(`/admin/hr/${id}/soft`, {}, getAuthHeader());
+        fetchHRs();
+      } catch (error) {
+        alert("Failed to deactivate HR");
+      }
+    }
+  };
+
+  const handleHardDelete = async (id) => {
+    if(window.confirm("WARNING: This will permanently delete the HR and their profile. Proceed?")) {
+      try {
+        await api.delete(`/admin/hr/${id}/hard`, getAuthHeader());
+        fetchHRs();
+      } catch (error) {
+        alert("Failed to delete HR permanently");
+      }
+    }
+  };
+
+  const handleRestore = async (id) => {
+    try {
+      await api.put(`/admin/hr/${id}/restore`, {}, getAuthHeader());
+      fetchHRs();
+    } catch (error) {
+      alert("Failed to restore HR");
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Controls Bar */}
@@ -109,6 +183,12 @@ const HRManagement = () => {
           >
             Active Companies
           </button>
+          <button
+            onClick={() => setActiveTab('INACTIVE')}
+            className={`px-6 py-2 rounded-md transition-all ${activeTab === 'INACTIVE' ? 'bg-red-500 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
+          >
+            Inactive / Deleted
+          </button>
         </div>
 
         {/* Search & Add */}
@@ -124,7 +204,10 @@ const HRManagement = () => {
             />
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setFormData({ companyName: '', email: '', designation: '', phone: '', linkedinUrl: '', industry: '', website: '', gstin: '' });
+              setShowAddModal(true);
+            }}
             className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap"
           >
             <Plus size={18} />
@@ -182,10 +265,28 @@ const HRManagement = () => {
                           <XCircle size={20} />
                         </button>
                       </>
+                    ) : activeTab === 'ACTIVE' ? (
+                      <>
+                        <button onClick={() => handleView(hr.id)} title="View Details" className="text-gray-400 hover:text-white transition-colors">
+                          <Eye size={18} />
+                        </button>
+
+                        <button onClick={() => openEditModal(hr)} title="Edit Details" className="text-blue-400 hover:text-blue-300 transition-colors">
+                          <Edit2 size={18} />
+                        </button>
+                        <button onClick={() => handleSoftDelete(hr.id)} title="Deactivate (Soft Delete)" className="text-red-400 hover:text-red-300 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      </>
                     ) : (
-                      <button onClick={() => { setSelectedHrId(hr.id); setShowRejectModal(true); }} title="Remove HR" className="text-red-500 hover:text-red-400 transition-colors">
-                        <Trash2 size={18} />
-                      </button>
+                      <>
+                        <button onClick={() => handleRestore(hr.id)} title="Restore HR" className="text-[#00ED64] hover:text-[#00c954] transition-colors">
+                          <RefreshCw size={18} />
+                        </button>
+                        <button onClick={() => handleHardDelete(hr.id)} title="PERMANENTLY DELETE" className="text-red-600 hover:text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>
@@ -195,49 +296,184 @@ const HRManagement = () => {
         </table>
       </div>
 
-      {/* Add HR Modal */}
-      {showAddModal && (
+      {/* Add/Edit HR Modal */}
+      {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#112240] rounded-xl border border-gray-800 w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleIn">
             
             <div className="flex justify-between items-center p-6 border-b border-gray-800">
-              <h2 className="text-2xl font-bold text-white">Manually Add Corporate Partner</h2>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white transition-colors">
+              <h2 className="text-2xl font-bold text-white">
+                {showAddModal ? "Manually Add Corporate Partner" : "Edit Corporate Partner"}
+              </h2>
+              <button onClick={() => { setShowAddModal(false); setShowEditModal(false); }} className="text-gray-400 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-sm text-gray-400">Company Name <span className="text-red-500">*</span></label>
-                  <input type="text" name="companyName" required value={formData.companyName} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
+            <form onSubmit={showAddModal ? handleAddSubmit : handleEditSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Personal Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white border-b border-[var(--color-bg-input)] pb-2">
+                    Recruiter Details
+                  </h3>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      Work Email <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="hr@company.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      Designation <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="text"
+                        name="designation"
+                        required
+                        value={formData.designation}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="e.g. Talent Acquisition Lead"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="tel"
+                        name="phone"
+                        required
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="+91 9876543210"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      LinkedIn Profile
+                    </label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="url"
+                        name="linkedinUrl"
+                        value={formData.linkedinUrl}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="https://linkedin.com/in/..."
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-gray-400">Email Address <span className="text-red-500">*</span></label>
-                  <input type="email" name="email" required value={formData.email} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-gray-400">Designation <span className="text-red-500">*</span></label>
-                  <input type="text" name="designation" required value={formData.designation} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm text-gray-400">Phone Number <span className="text-red-500">*</span></label>
-                  <input type="text" name="phone" required value={formData.phone} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <label className="text-sm text-gray-400">LinkedIn URL</label>
-                  <input type="url" name="linkedinUrl" value={formData.linkedinUrl} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
+
+                {/* Company Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white border-b border-[var(--color-bg-input)] pb-2">
+                    Company Details
+                  </h3>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      Company Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="text"
+                        name="companyName"
+                        required
+                        value={formData.companyName}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="e.g. Acme Corp"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      Industry
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="text"
+                        name="industry"
+                        value={formData.industry}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="e.g. Information Technology"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      Company Website
+                    </label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="url"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="https://acme.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">
+                      GSTIN
+                    </label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-3 h-4 w-4 text-[var(--color-text-secondary)]" />
+                      <input
+                        type="text"
+                        name="gstin"
+                        value={formData.gstin}
+                        onChange={handleInputChange}
+                        className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
+                        placeholder="Optional"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-800">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2 text-gray-400 hover:text-white transition-colors">
+                <button type="button" onClick={() => { setShowAddModal(false); setShowEditModal(false); }} className="px-6 py-2 text-gray-400 hover:text-white transition-colors">
                   Cancel
                 </button>
                 <button type="submit" className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-6 rounded-lg transition-colors">
                   <Save size={18} />
-                  <span>Save & Send Setup Link</span>
+                  <span>{showAddModal ? "Save & Send Setup Link" : "Save Changes"}</span>
                 </button>
               </div>
             </form>
@@ -271,6 +507,81 @@ const HRManagement = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && viewData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#112240] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-800 animate-fadeIn">
+            <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-[#0A192F]/50">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                HR Details
+              </h3>
+              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Company Name</span>
+                  <span className="text-white font-semibold">{viewData.companyName}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Email</span>
+                  <span className="text-[#00ED64]">{viewData.email}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Designation</span>
+                  <span className="text-white">{viewData.designation}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Phone</span>
+                  <span className="text-white">{viewData.phone}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Industry</span>
+                  <span className="text-white">{viewData.industry || '-'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Website</span>
+                  <span className="text-white">{viewData.website ? <a href={viewData.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{viewData.website}</a> : '-'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">GSTIN</span>
+                  <span className="text-white">{viewData.gstin || '-'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Account Status</span>
+                  <span className={`font-semibold ${viewData.status === 'ACTIVE' ? 'text-[#00ED64]' : viewData.status === 'PENDING' ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {viewData.status}
+                  </span>
+                </div>
+                {viewData.createdBy && (
+                  <div className="col-span-2">
+                    <span className="block text-gray-500 font-medium mb-1">Added By</span>
+                    <span className="text-white bg-gray-800 px-2 py-1 rounded text-xs">{viewData.createdBy.role}: {viewData.createdBy.email}</span>
+                  </div>
+                )}
+                {viewData.updatedBy && (
+                  <div className="col-span-2">
+                    <span className="block text-gray-500 font-medium mb-1">Last Updated By</span>
+                    <span className="text-white bg-gray-800 px-2 py-1 rounded text-xs">{viewData.updatedBy.role}: {viewData.updatedBy.email}</span>
+                  </div>
+                )}
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Created At</span>
+                  <span className="text-white">{new Date(viewData.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Last Updated At</span>
+                  <span className="text-white">{new Date(viewData.updatedAt).toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

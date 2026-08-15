@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Briefcase, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Briefcase, LogOut, Settings } from 'lucide-react';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -10,11 +10,12 @@ const AdminLayout = () => {
     { path: '/admin/students', icon: <Users size={20} />, label: 'Student Management' },
     { path: '/admin/students/bulk-import', icon: <Users size={20} />, label: 'Bulk Import Students' },
     { path: '/admin/hr', icon: <Briefcase size={20} />, label: 'HR Management' },
+    { path: '/admin/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
 
   return (
     <div className="min-h-screen bg-[#0A192F] flex overflow-hidden font-sans">
-      
+
       {/* Sidebar */}
       <aside className="w-64 bg-[#112240] border-r border-gray-800 flex flex-col transition-all duration-300 z-20">
         {/* Logo Area */}
@@ -32,8 +33,8 @@ const AdminLayout = () => {
               to={item.path}
               className={({ isActive }) => `
                 flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
-                ${isActive 
-                  ? 'bg-[#00ED64]/10 text-[#00ED64] font-semibold border-r-2 border-[#00ED64]' 
+                ${isActive
+                  ? 'bg-[#00ED64]/10 text-[#00ED64] font-semibold border-r-2 border-[#00ED64]'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'}
               `}
             >
@@ -64,7 +65,7 @@ const AdminLayout = () => {
         {/* Dynamic Page Content */}
         <div className="flex-1 overflow-y-auto p-8 relative">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#00ED64] rounded-full mix-blend-screen filter blur-[150px] opacity-5 pointer-events-none"></div>
-          
+
           <div className="relative z-10">
             <Outlet />
           </div>

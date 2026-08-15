@@ -27,7 +27,7 @@ router.post(
   adminController.bulkImportDryRun
 );
 
-// Bulk CSV Import (Final Commit & Email Queue)
+// Bulk CSV Import (Final Commit & Email)
 router.post(
   "/students/bulk-import-commit",
   protect,
@@ -43,12 +43,52 @@ router.get(
   adminController.getAllHRs
 );
 
+// Get HR By Id
+router.get(
+  "/hr/:id",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.getHRById
+);
+
 // Add HR Manually
 router.post(
   "/hr/manual",
   protect,
   authorizeRoles("SUPERADMIN", "TPO"),
   adminController.addHRManually
+);
+
+// Update HR
+router.put(
+  "/hr/:id",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.updateHR
+);
+
+// Soft Delete HR
+router.put(
+  "/hr/:id/soft",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.softDeleteHR
+);
+
+// Hard Delete HR
+router.delete(
+  "/hr/:id/hard",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.hardDeleteHR
+);
+
+// Restore HR
+router.put(
+  "/hr/:id/restore",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.restoreHR
 );
 
 // Add Student Manually
@@ -65,6 +105,14 @@ router.get(
   protect,
   authorizeRoles("SUPERADMIN", "TPO"),
   adminController.getAllStudents
+);
+
+// Get Student By Id
+router.get(
+  "/students/:id",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.getStudentById
 );
 
 // Update Student

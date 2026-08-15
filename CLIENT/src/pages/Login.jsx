@@ -26,7 +26,7 @@ const Login = () => {
         toast("Please change your temporary password to continue.", {
           icon: "⚠️",
         });
-        navigate("/force-password-change");
+        navigate("/force-password-change", { state: { token: resultAction.token } });
         return;
       }
 

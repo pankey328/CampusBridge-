@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Shield, RefreshCw, X, Save } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Shield, RefreshCw, X, Save, Eye } from 'lucide-react';
 import api from '../../services/api';
 
 const StudentManagement = () => {
@@ -10,7 +10,9 @@ const StudentManagement = () => {
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [viewData, setViewData] = useState(null);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -29,7 +31,7 @@ const StudentManagement = () => {
     setLoading(true);
     try {
       const { data } = await api.get(`/admin/students?status=${activeTab}&search=${searchTerm}`, getAuthHeader());
-      setStudents(data);
+      setStudents(data.data || []);
     } catch (error) {
       console.error("Failed to fetch students", error);
     }
@@ -85,6 +87,16 @@ const StudentManagement = () => {
     setShowEditModal(true);
   };
 
+  const handleView = async (id) => {
+    try {
+      const { data } = await api.get(`/admin/students/${id}`, getAuthHeader());
+      setViewData(data.data);
+      setShowViewModal(true);
+    } catch (error) {
+      alert("Failed to fetch student details");
+    }
+  };
+
   const handleSoftDelete = async (id) => {
     if(window.confirm("Are you sure you want to deactivate this student? They won't be able to log in.")) {
       try {
@@ -136,13 +148,19 @@ const StudentManagement = () => {
             onClick={() => setActiveTab('ACTIVE')}
             className={`px-6 py-2 rounded-md transition-all ${activeTab === 'ACTIVE' ? 'bg-[#00ED64] text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
           >
-            Active Students
+            Active
+          </button>
+          <button
+            onClick={() => setActiveTab('PENDING')}
+            className={`px-6 py-2 rounded-md transition-all ${activeTab === 'PENDING' ? 'bg-yellow-500 text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
+          >
+            Pending
           </button>
           <button
             onClick={() => setActiveTab('INACTIVE')}
             className={`px-6 py-2 rounded-md transition-all ${activeTab === 'INACTIVE' ? 'bg-red-500 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
           >
-            Inactive / Deleted
+            Inactive
           </button>
         </div>
 
@@ -221,13 +239,18 @@ const StudentManagement = () => {
                       <Shield size={18} />
                     </button>
 
+                    {/* View Button */}
+                    <button onClick={() => handleView(student.id)} title="View Details" className="text-gray-400 hover:text-white transition-colors">
+                      <Eye size={18} />
+                    </button>
+
                     {/* Edit Button */}
                     <button onClick={() => openEditModal(student)} title="Edit Details" className="text-blue-400 hover:text-blue-300 transition-colors">
                       <Edit2 size={18} />
                     </button>
 
                     {/* Soft/Hard Delete and Restore logic based on Tab */}
-                    {activeTab === 'ACTIVE' ? (
+                    {activeTab !== 'INACTIVE' ? (
                       <button onClick={() => handleSoftDelete(student.id)} title="Deactivate (Soft Delete)" className="text-red-400 hover:text-red-300 transition-colors">
                         <Trash2 size={18} />
                       </button>
@@ -301,6 +324,85 @@ const StudentManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && viewData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-[#112240] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-800 animate-fadeIn">
+            <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-[#0A192F]/50">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                Student Details
+              </h3>
+              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Full Name</span>
+                  <span className="text-white font-semibold">{viewData.firstName} {viewData.lastName}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Email</span>
+                  <span className="text-[#00ED64]">{viewData.email}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Enrollment No.</span>
+                  <span className="text-white">{viewData.rollNumber}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Branch</span>
+                  <span className="text-white">{viewData.branch || '-'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Passout Year</span>
+                  <span className="text-white">{viewData.passoutYear}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">CGPA</span>
+                  <span className="text-white">{viewData.cgpa || '0'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Active Backlogs</span>
+                  <span className="text-white">{viewData.activeBacklogs || '0'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Account Status</span>
+                  <span className={`font-semibold ${viewData.status === 'ACTIVE' ? 'text-[#00ED64]' : viewData.status === 'PENDING' ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {viewData.status}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Apply Lock</span>
+                  <span className="text-white">{viewData.isLocked ? 'Locked' : 'Allowed'}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Created At</span>
+                  <span className="text-white">{new Date(viewData.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 font-medium mb-1">Last Updated At</span>
+                  <span className="text-white">{new Date(viewData.updatedAt).toLocaleDateString()}</span>
+                </div>
+                {viewData.createdBy && (
+                  <div className="col-span-2">
+                    <span className="block text-gray-500 font-medium mb-1">Added By</span>
+                    <span className="text-white bg-gray-800 px-2 py-1 rounded text-xs">{viewData.createdBy.role}: {viewData.createdBy.email}</span>
+                  </div>
+                )}
+                {viewData.updatedBy && (
+                  <div className="col-span-2">
+                    <span className="block text-gray-500 font-medium mb-1">Last Updated By</span>
+                    <span className="text-white bg-gray-800 px-2 py-1 rounded text-xs">{viewData.updatedBy.role}: {viewData.updatedBy.email}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
