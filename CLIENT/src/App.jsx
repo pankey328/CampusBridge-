@@ -10,6 +10,9 @@ import AdminOverview from "./pages/admin/AdminOverview";
 import StudentManagement from "./components/admin/StudentManagement";
 import HRManagement from "./components/admin/HRManagement";
 import Settings from "./pages/admin/Settings";
+import JobDrives from "./pages/admin/JobDrives";
+import CreateJobDrive from "./pages/admin/CreateJobDrive";
+import TPOManagement from "./components/admin/TPOManagement";
 
 function App() {
   return (
@@ -29,6 +32,10 @@ function App() {
             <Route path="students" element={<StudentManagement />} />
             <Route path="students/bulk-import" element={<BulkImportStudents />} />
             <Route path="hr" element={<HRManagement />} />
+            <Route path="job-drives" element={<JobDrives />} />
+            <Route path="job-drives/create" element={<CreateJobDrive />} />
+            <Route path="job-drives/edit/:id" element={<CreateJobDrive />} />
+            <Route path="tpos" element={<TPOManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

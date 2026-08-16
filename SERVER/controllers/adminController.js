@@ -43,6 +43,7 @@ exports.getAllHRs = async (req, res) => {
         industry: company?.industry || "",
         website: company?.website || "",
         gstin: company?.gstin || "",
+        companyId: company?._id || null,
       };
     });
 

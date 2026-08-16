@@ -60,13 +60,13 @@ const SetupPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md glass-panel rounded-2xl p-8 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--color-bg-primary)] transition-colors duration-300">
+      <div className="w-full max-w-md glass-panel rounded-2xl p-8 shadow-2xl transition-all duration-300">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-bg-input)] mb-4 border border-[var(--color-brand-primary)]">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-bg-input)] mb-4 border border-[var(--color-border)] shadow-sm">
             <CheckCircle className="w-8 h-8 text-[var(--color-brand-primary)]" />
           </div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">
+          <h2 className="text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">
             Account Activation
           </h2>
           <p className="text-[var(--color-text-secondary)] mt-2">
@@ -86,7 +86,7 @@ const SetupPassword = () => {
               <input
                 type="password"
                 required
-                className="block w-full pl-10 pr-3 py-3 border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent transition-all"
+                className="block w-full pl-10 pr-3 py-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent transition-all shadow-sm"
                 placeholder="••••••••"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -105,7 +105,7 @@ const SetupPassword = () => {
               <input
                 type="password"
                 required
-                className="block w-full pl-10 pr-3 py-3 border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent transition-all"
+                className="block w-full pl-10 pr-3 py-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent transition-all shadow-sm"
                 placeholder="••••••••"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
@@ -116,7 +116,7 @@ const SetupPassword = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-[var(--color-bg-dark)] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-[#001E2B] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
             {isLoading ? "Activating..." : "Activate Account"}
           </button>

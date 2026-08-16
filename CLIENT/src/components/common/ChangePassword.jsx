@@ -15,7 +15,7 @@ const ChangePassword = () => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmNewPassword) {
       toast.error('New passwords do not match');
       return;
@@ -39,7 +39,7 @@ const ChangePassword = () => {
       );
 
       toast.success(response.data.message || 'Password changed successfully!');
-      
+
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
@@ -61,7 +61,7 @@ const ChangePassword = () => {
 
       <form onSubmit={handlePasswordChange} className="p-6 space-y-6">
         <div className="space-y-4 max-w-2xl">
-          
+
           {/* Current Password */}
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">

@@ -1,27 +1,66 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #00ED64;
-  --color-brand-primary-hover: #00C853;
-  --color-bg-dark: #0A192F;
-  --color-bg-card: #112240;
-  --color-bg-input: #1C3052;
-  --color-text-primary: #CCD6F6;
-  --color-text-secondary: #8892B0;
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-primary-hover: var(--color-brand-primary-hover);
+  --color-bg-dark: var(--color-bg-primary); /* keeping legacy name for fallback */
+  --color-bg-card: var(--color-bg-secondary); /* keeping legacy name for fallback */
+  --color-bg-input: var(--color-bg-input);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border: var(--color-border);
   
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
-body {
-  background-color: var(--color-bg-dark);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
+:root {
+  /* Light Theme (MongoDB Atlas Inspired) */
+  --color-brand-primary: #00ED64;
+  --color-brand-primary-hover: #00C853;
+  
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F8F9FA;
+  --color-bg-input: #FFFFFF;
+  
+  --color-text-primary: #001E2B; /* Atlas Slate */
+  --color-text-secondary: #5C6C75;
+  
+  --color-border: #E8EDF1;
 }
 
-/* Glassmorphism */
+.dark {
+  /* Dark Theme */
+  --color-brand-primary: #00ED64;
+  --color-brand-primary-hover: #00C853;
+  
+  --color-bg-primary: #0A192F;
+  --color-bg-secondary: #112240;
+  --color-bg-input: #1C3052;
+  
+  --color-text-primary: #CCD6F6;
+  --color-text-secondary: #8892B0;
+  
+  --color-border: #233554;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glassmorphism / Cards */
 .glass-panel {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .glass-panel {
   background: rgba(17, 34, 64, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }

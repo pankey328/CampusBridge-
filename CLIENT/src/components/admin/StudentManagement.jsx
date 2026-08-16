@@ -7,13 +7,13 @@ const StudentManagement = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('ACTIVE'); // ACTIVE or INACTIVE
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [viewData, setViewData] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -98,7 +98,7 @@ const StudentManagement = () => {
   };
 
   const handleSoftDelete = async (id) => {
-    if(window.confirm("Are you sure you want to deactivate this student? They won't be able to log in.")) {
+    if (window.confirm("Are you sure you want to deactivate this student? They won't be able to log in.")) {
       try {
         await api.put(`/admin/students/${id}/soft`, {}, getAuthHeader());
         fetchStudents();
@@ -109,7 +109,7 @@ const StudentManagement = () => {
   };
 
   const handleHardDelete = async (id) => {
-    if(window.confirm("WARNING: This will permanently delete the student and all their data. Proceed?")) {
+    if (window.confirm("WARNING: This will permanently delete the student and all their data. Proceed?")) {
       try {
         await api.delete(`/admin/students/${id}/hard`, getAuthHeader());
         fetchStudents();
@@ -141,7 +141,7 @@ const StudentManagement = () => {
     <div className="space-y-6 animate-fadeIn">
       {/* Controls Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        
+
         {/* Tabs */}
         <div className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800">
           <button
@@ -231,9 +231,9 @@ const StudentManagement = () => {
                   </td>
                   <td className="px-6 py-4 text-right space-x-3">
                     {/* Toggle Apply Lock Button */}
-                    <button 
+                    <button
                       onClick={() => handleToggleLock(student.id)}
-                      title={student.isLocked ? "Unlock Applications" : "Lock Applications"} 
+                      title={student.isLocked ? "Unlock Applications" : "Lock Applications"}
                       className={`transition-colors ${student.isLocked ? 'text-green-500 hover:text-green-400' : 'text-orange-500 hover:text-orange-400'}`}
                     >
                       <Shield size={18} />
@@ -249,7 +249,7 @@ const StudentManagement = () => {
                       <Edit2 size={18} />
                     </button>
 
-                    {/* Soft/Hard Delete and Restore logic based on Tab */}
+                    {/* Soft/Hard Delete and Restore */}
                     {activeTab !== 'INACTIVE' ? (
                       <button onClick={() => handleSoftDelete(student.id)} title="Deactivate (Soft Delete)" className="text-red-400 hover:text-red-300 transition-colors">
                         <Trash2 size={18} />
@@ -276,7 +276,7 @@ const StudentManagement = () => {
       {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#112240] rounded-xl border border-gray-800 w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleIn">
-            
+
             <div className="flex justify-between items-center p-6 border-b border-gray-800">
               <h2 className="text-2xl font-bold text-white">
                 {showAddModal ? "Manually Add Student" : "Edit Student Details"}
@@ -340,7 +340,7 @@ const StudentManagement = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>

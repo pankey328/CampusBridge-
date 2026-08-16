@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+const roundSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    trim: true,
+  },
+  order: {
+    type: Number,
+    required: true,
+  },
+});
+
 const jobDriveSchema = new mongoose.Schema(
   {
     companyId: {
@@ -64,6 +80,18 @@ const jobDriveSchema = new mongoose.Schema(
       type: String,
       enum: ["DRAFT", "PENDING_APPROVAL", "ACTIVE", "COMPLETED", "CANCELLED"],
       default: "PENDING_APPROVAL", 
+    },
+    rounds: {
+      type: [roundSchema],
+      default: [],
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }

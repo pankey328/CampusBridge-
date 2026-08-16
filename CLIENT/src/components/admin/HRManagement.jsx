@@ -7,7 +7,7 @@ const HRManagement = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('PENDING'); // PENDING or ACTIVE
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -16,7 +16,7 @@ const HRManagement = () => {
   const [selectedHr, setSelectedHr] = useState(null);
   const [viewData, setViewData] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  
+
   const [formData, setFormData] = useState({
     companyName: '',
     email: '',
@@ -74,7 +74,7 @@ const HRManagement = () => {
   };
 
   const handleApprove = async (id) => {
-    if(window.confirm("Approve this HR registration?")) {
+    if (window.confirm("Approve this HR registration?")) {
       try {
         await api.put(`/admin/approve-hr/${id}`, {}, getAuthHeader());
         fetchHRs();
@@ -134,7 +134,7 @@ const HRManagement = () => {
   };
 
   const handleSoftDelete = async (id) => {
-    if(window.confirm("Are you sure you want to deactivate this HR? They won't be able to log in.")) {
+    if (window.confirm("Are you sure you want to deactivate this HR? They won't be able to log in.")) {
       try {
         await api.put(`/admin/hr/${id}/soft`, {}, getAuthHeader());
         fetchHRs();
@@ -145,7 +145,7 @@ const HRManagement = () => {
   };
 
   const handleHardDelete = async (id) => {
-    if(window.confirm("WARNING: This will permanently delete the HR and their profile. Proceed?")) {
+    if (window.confirm("WARNING: This will permanently delete the HR and their profile. Proceed?")) {
       try {
         await api.delete(`/admin/hr/${id}/hard`, getAuthHeader());
         fetchHRs();
@@ -168,7 +168,7 @@ const HRManagement = () => {
     <div className="space-y-6 animate-fadeIn">
       {/* Controls Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        
+
         {/* Tabs */}
         <div className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800">
           <button
@@ -300,7 +300,7 @@ const HRManagement = () => {
       {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#112240] rounded-xl border border-gray-800 w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleIn">
-            
+
             <div className="flex justify-between items-center p-6 border-b border-gray-800">
               <h2 className="text-2xl font-bold text-white">
                 {showAddModal ? "Manually Add Corporate Partner" : "Edit Corporate Partner"}
@@ -488,7 +488,7 @@ const HRManagement = () => {
             <div className="p-6">
               <h3 className="text-xl font-bold text-white mb-4">Reject Registration</h3>
               <p className="text-sm text-gray-400 mb-4">Please provide a reason for rejecting this HR. This will be sent to them via email.</p>
-              
+
               <form onSubmit={handleReject}>
                 <textarea
                   required
@@ -497,7 +497,7 @@ const HRManagement = () => {
                   className="w-full bg-[#0A192F] border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-red-500 h-32 resize-none"
                   placeholder="Enter rejection reason..."
                 />
-                
+
                 <div className="flex justify-end space-x-3 mt-6">
                   <button type="button" onClick={() => setShowRejectModal(false)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
                     Cancel
@@ -524,7 +524,7 @@ const HRManagement = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>

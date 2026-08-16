@@ -46,13 +46,13 @@ const RegisterHR = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 py-12">
-      <div className="w-full max-w-2xl glass-panel rounded-2xl p-8 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center p-4 py-12 bg-[var(--color-bg-primary)] transition-colors duration-300">
+      <div className="w-full max-w-2xl glass-panel rounded-2xl p-8 shadow-2xl transition-all duration-300">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-bg-input)] mb-4 border border-[var(--color-brand-primary)]">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-bg-input)] mb-4 border border-[var(--color-border)] shadow-sm">
             <Building2 className="w-8 h-8 text-[var(--color-brand-primary)]" />
           </div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">
+          <h2 className="text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">
             Corporate Partner Registration
           </h2>
           <p className="text-[var(--color-text-secondary)] mt-2">
@@ -64,7 +64,7 @@ const RegisterHR = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Personal Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[var(--color-bg-input)] pb-2">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
                 Recruiter Details
               </h3>
 
@@ -79,7 +79,7 @@ const RegisterHR = () => {
                     name="email"
                     required
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="hr@company.com"
                   />
                 </div>
@@ -96,7 +96,7 @@ const RegisterHR = () => {
                     name="designation"
                     required
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="e.g. Talent Acquisition Lead"
                   />
                 </div>
@@ -112,7 +112,7 @@ const RegisterHR = () => {
                     type="tel"
                     name="phone"
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="+91 9876543210"
                   />
                 </div>
@@ -128,7 +128,7 @@ const RegisterHR = () => {
                     type="url"
                     name="linkedinUrl"
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="https://linkedin.com/in/..."
                   />
                 </div>
@@ -137,7 +137,7 @@ const RegisterHR = () => {
 
             {/* Company Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white border-b border-[var(--color-bg-input)] pb-2">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
                 Company Details
               </h3>
 
@@ -152,7 +152,7 @@ const RegisterHR = () => {
                     name="companyName"
                     required
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="e.g. Acme Corp"
                   />
                 </div>
@@ -169,7 +169,7 @@ const RegisterHR = () => {
                     name="industry"
                     required
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="e.g. Information Technology"
                   />
                 </div>
@@ -186,7 +186,7 @@ const RegisterHR = () => {
                     name="website"
                     required
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="https://acme.com"
                   />
                 </div>
@@ -202,7 +202,7 @@ const RegisterHR = () => {
                     type="text"
                     name="gstin"
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none"
+                    className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:ring-1 focus:ring-[var(--color-brand-primary)] focus:outline-none shadow-sm"
                     placeholder="Optional, speeds up approval"
                   />
                 </div>
@@ -213,7 +213,7 @@ const RegisterHR = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-[var(--color-bg-dark)] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 mt-8"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-[#001E2B] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 mt-8"
           >
             {isLoading ? "Submitting Request..." : "Submit Partnership Request"}
           </button>

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
+const jobDriveController = require("../controllers/jobDriveController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // Approve HRs and send email (SUPERADMIN, TPO)
@@ -156,3 +157,39 @@ router.put(
 );
 
 module.exports = router;
+
+// Job Drive Routes
+router.post(
+  "/job-drives",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  jobDriveController.createJobDrive
+);
+
+router.get(
+  "/job-drives",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  jobDriveController.getAllJobDrives
+);
+
+router.get(
+  "/job-drives/:id",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  jobDriveController.getJobDriveById
+);
+
+router.put(
+  "/job-drives/:id",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  jobDriveController.updateJobDrive
+);
+
+router.delete(
+  "/job-drives/:id",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  jobDriveController.deleteJobDrive
+);
