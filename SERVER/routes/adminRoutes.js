@@ -193,3 +193,57 @@ router.delete(
   authorizeRoles("SUPERADMIN", "TPO"),
   jobDriveController.deleteJobDrive
 );
+
+router.put(
+  "/job-drives/:id/complete",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO", "HR"),
+  jobDriveController.completeJobDrive
+);
+
+// Application Tracking Routes
+router.get(
+  "/job-drives/:id/applications",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO", "HR"),
+  jobDriveController.getDriveApplications
+);
+
+router.put(
+  "/applications/bulk",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO", "HR"),
+  jobDriveController.bulkUpdateApplicationStatus
+);
+
+router.put(
+  "/applications/:applicationId/status",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO", "HR"),
+  jobDriveController.updateApplicationStatus
+);
+
+// Notifications & Resend
+router.get(
+  "/notifications",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.getNotificationLogs
+);
+
+router.post(
+  "/notifications/:id/resend",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.resendNotification
+);
+
+// HR specific resend activation link
+router.post(
+  "/hr/:id/resend-activation",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO"),
+  adminController.resendHRActivation
+);
+
+module.exports = router;

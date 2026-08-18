@@ -36,11 +36,19 @@ app.use("/api/admin", adminRoutes);
 const hrRoutes = require("./routes/hrRoutes");
 app.use("/api/hr", hrRoutes);
 
+// Student Routes
+const studentRoutes = require("./routes/studentRoutes");
+app.use("/api/student", studentRoutes);
+
+// Interview Routes
+const interviewRoutes = require("./routes/interviewRoutes");
+app.use("/api/interviews", interviewRoutes);
+
 mongoose
   .connect(url)
   .then(() => {
     console.log(`DATABASE Connected`);
-    
+
     const { startEmailWorker } = require("./workers/emailQueueRunner");
     startEmailWorker();
   })

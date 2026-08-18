@@ -1,8 +1,20 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-import toast from 'react-hot-toast';
-import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, ArrowRight, Loader2, ArrowLeft, RefreshCw, Trash2, Edit2, Save } from 'lucide-react';
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import toast from "react-hot-toast";
+import {
+  UploadCloud,
+  FileSpreadsheet,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Loader2,
+  ArrowLeft,
+  RefreshCw,
+  Trash2,
+  Edit2,
+  Save,
+} from "lucide-react";
 
 const BulkImportStudents = () => {
   const [file, setFile] = useState(null);
@@ -225,19 +237,21 @@ const BulkImportStudents = () => {
             <div className="flex bg-[#112240] p-1 rounded-lg mb-6">
               <button
                 onClick={() => setImportMode("file")}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${importMode === "file"
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                  importMode === "file"
                     ? "bg-[#00ED64] text-[#0A192F]"
                     : "text-gray-400 hover:text-white"
-                  }`}
+                }`}
               >
                 CSV File
               </button>
               <button
                 onClick={() => setImportMode("sheet")}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${importMode === "sheet"
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                  importMode === "sheet"
                     ? "bg-[#00ED64] text-[#0A192F]"
                     : "text-gray-400 hover:text-white"
-                  }`}
+                }`}
               >
                 Google Sheet
               </button>
@@ -249,12 +263,13 @@ const BulkImportStudents = () => {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${isDragging
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                  isDragging
                     ? "border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10"
                     : file
                       ? "border-[var(--color-brand-primary)] bg-[var(--color-bg-input)]"
                       : "border-[var(--color-text-secondary)]/30 hover:border-[var(--color-brand-primary)] hover:bg-[var(--color-bg-input)]/50"
-                  }`}
+                }`}
               >
                 <input
                   type="file"
@@ -507,6 +522,8 @@ const BulkImportStudents = () => {
                             <th className="px-4 py-3">Email</th>
                             <th className="px-4 py-3">First Name</th>
                             <th className="px-4 py-3">Last Name</th>
+                            <th className="px-4 py-3">CGPA</th>
+                            <th className="px-4 py-3">Backlogs</th>
                             <th className="px-4 py-3 text-center">Actions</th>
                           </tr>
                         </thead>
@@ -574,6 +591,35 @@ const BulkImportStudents = () => {
                                       className="w-20 px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-brand-primary)] rounded focus:outline-none text-white text-xs"
                                     />
                                   </td>
+                                  <td className="px-2 py-2">
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={student.cgpa || ""}
+                                      onChange={(e) =>
+                                        handleEditValidRow(
+                                          idx,
+                                          "cgpa",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="w-16 px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-brand-primary)] rounded focus:outline-none text-white text-xs"
+                                    />
+                                  </td>
+                                  <td className="px-2 py-2">
+                                    <input
+                                      type="number"
+                                      value={student.activeBacklogs || ""}
+                                      onChange={(e) =>
+                                        handleEditValidRow(
+                                          idx,
+                                          "activeBacklogs",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="w-16 px-2 py-1 bg-[var(--color-bg-dark)] border border-[var(--color-brand-primary)] rounded focus:outline-none text-white text-xs"
+                                    />
+                                  </td>
                                   <td className="px-4 py-2 text-center flex justify-center space-x-3">
                                     <button
                                       onClick={() => setEditingValidRow(null)}
@@ -595,6 +641,12 @@ const BulkImportStudents = () => {
                                   </td>
                                   <td className="px-4 py-3 text-white">
                                     {student.lastName}
+                                  </td>
+                                  <td className="px-4 py-3 text-white">
+                                    {student.cgpa || 0}
+                                  </td>
+                                  <td className="px-4 py-3 text-white">
+                                    {student.activeBacklogs || 0}
                                   </td>
                                   <td className="px-4 py-3 text-center flex justify-center space-x-3">
                                     <button
@@ -657,4 +709,4 @@ const BulkImportStudents = () => {
   );
 };
 
-export default BulkImportStudents
+export default BulkImportStudents;

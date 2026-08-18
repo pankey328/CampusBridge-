@@ -12,7 +12,18 @@ import HRManagement from "./components/admin/HRManagement";
 import Settings from "./pages/admin/Settings";
 import JobDrives from "./pages/admin/JobDrives";
 import CreateJobDrive from "./pages/admin/CreateJobDrive";
+import DriveApplications from "./pages/admin/DriveApplications";
 import TPOManagement from "./components/admin/TPOManagement";
+import NotificationLogs from "./pages/admin/NotificationLogs";
+
+import HRLayout from "./components/hr/HRLayout";
+import HRDashboard from "./pages/hr/HRDashboard";
+import HRJobDrives from "./pages/hr/HRJobDrives";
+import StudentLayout from "./components/student/StudentLayout";
+import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentJobDrives from "./pages/student/JobDrives";
+import MyApplications from "./pages/student/MyApplications";
+import StudentProfile from "./pages/student/StudentProfile";
 
 function App() {
   return (
@@ -35,7 +46,28 @@ function App() {
             <Route path="job-drives" element={<JobDrives />} />
             <Route path="job-drives/create" element={<CreateJobDrive />} />
             <Route path="job-drives/edit/:id" element={<CreateJobDrive />} />
+            <Route path="job-drives/:id/applications" element={<DriveApplications />} />
             <Route path="tpos" element={<TPOManagement />} />
+            <Route path="notifications" element={<NotificationLogs />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
+          <Route path="/student" element={<StudentLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="drives" element={<StudentJobDrives />} />
+            <Route path="applications" element={<MyApplications />} />
+            <Route path="profile" element={<StudentProfile />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
+          <Route path="/hr" element={<HRLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<HRDashboard />} />
+            <Route path="job-drives" element={<HRJobDrives />} />
+            <Route path="job-drives/create" element={<CreateJobDrive />} />
+            <Route path="job-drives/edit/:id" element={<CreateJobDrive />} />
+            <Route path="job-drives/:id/applications" element={<DriveApplications />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

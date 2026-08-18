@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Company = require("../models/Company");
 const { generateActivationToken } = require("../utils/cryptoUtils");
+const { sendMail } = require("../utils/emailUtils");
 
 // Get All HRs
 exports.getAllHRs = async (req, res) => {
@@ -13,7 +14,7 @@ exports.getAllHRs = async (req, res) => {
       query.isApproved = false;
     } else if (status === "ACTIVE") {
       query.isApproved = true;
-      query.status = "ACTIVE";
+      query.status = { $ne: "INACTIVE" };
     } else if (status === "INACTIVE") {
       query.isApproved = true;
       query.status = "INACTIVE";
@@ -137,7 +138,26 @@ exports.approveHR = async (req, res) => {
       <a href="${activationLink}" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Activate Account</a>
       <p>This link will expire in 24 hours.</p>
     `;
-    await sendMail(hrUser.email, "Your CampusBridge HR Account is Approved!", approveHtml);
+    const subject = "Your CampusBridge HR Account is Approved!";
+    const log = new NotificationLog({
+      recipientEmail: hrUser.email,
+      subject,
+      content: approveHtml,
+      type: "HR_ACTIVATION",
+      status: "PENDING",
+      attempts: 1
+    });
+
+    try {
+      await sendMail(hrUser.email, subject, approveHtml);
+      log.status = "DELIVERED";
+      log.deliveredAt = new Date();
+    } catch (err) {
+      console.error("Failed to send HR approval email", err);
+      log.status = "FAILED";
+      log.errorMessage = err.message || "Unknown error";
+    }
+    await log.save();
 
     res.status(200).json({
       message: "HR successfully approved. Setup email dispatched.",
@@ -350,6 +370,8 @@ exports.bulkImportCommit = async (req, res) => {
           rollNumber: student.enrollmentNumber,
           branch: student.department || "",
           passoutYear: student.graduationYear || new Date().getFullYear(),
+          cgpa: student.cgpa ? parseFloat(student.cgpa) : 0,
+          activeBacklogs: student.activeBacklogs ? parseInt(student.activeBacklogs) : 0,
           createdBy: req.user.id,
         });
         await newProfile.save({ session });
@@ -575,7 +597,7 @@ exports.restoreHR = async (req, res) => {
 // Add Student Manually
 exports.addStudentManually = async (req, res) => {
   try {
-    const { email, firstName, lastName, rollNumber, branch, passoutYear } = req.body;
+    const { email, firstName, lastName, rollNumber, branch, passoutYear, cgpa, activeBacklogs } = req.body;
 
     if (!email || !firstName || !lastName || !rollNumber) {
       return res.status(400).json({ message: "Please provide all required fields." });
@@ -608,6 +630,8 @@ exports.addStudentManually = async (req, res) => {
       rollNumber,
       branch: branch || "",
       passoutYear: passoutYear || new Date().getFullYear(),
+      cgpa: cgpa || 0,
+      activeBacklogs: activeBacklogs || 0,
       createdBy: req.user.id,
     });
     await newProfile.save();
@@ -704,6 +728,9 @@ exports.getStudentById = async (req, res) => {
       activeBacklogs: profile?.activeBacklogs,
       skills: profile?.skills || [],
       resumeUrl: profile?.resumeUrl || "",
+      phone: profile?.phone || "",
+      linkedinUrl: profile?.linkedinUrl || "",
+      githubUrl: profile?.githubUrl || "",
       isLocked: profile?.isLocked,
       createdBy: profile?.createdBy ? { email: profile.createdBy.email, role: profile.createdBy.role } : null,
       updatedBy: profile?.updatedBy ? { email: profile.updatedBy.email, role: profile.updatedBy.role } : null
@@ -720,7 +747,7 @@ exports.getStudentById = async (req, res) => {
 exports.updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, rollNumber, branch, passoutYear, email } = req.body;
+    const { firstName, lastName, rollNumber, branch, passoutYear, email, cgpa, activeBacklogs } = req.body;
 
     const user = await User.findById(id);
     if (!user || user.role !== "STUDENT") return res.status(404).json({ message: "Student not found" });
@@ -744,6 +771,8 @@ exports.updateStudent = async (req, res) => {
       profile.rollNumber = rollNumber || profile.rollNumber;
       profile.branch = branch || profile.branch;
       profile.passoutYear = passoutYear || profile.passoutYear;
+      if (cgpa !== undefined) profile.cgpa = cgpa;
+      if (activeBacklogs !== undefined) profile.activeBacklogs = activeBacklogs;
       profile.updatedBy = req.user.id;
       await profile.save();
     }
@@ -820,6 +849,110 @@ exports.toggleStudentLock = async (req, res) => {
     });
   } catch (error) {
     console.error("Toggle Lock Student Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Get all notification logs
+exports.getNotificationLogs = async (req, res) => {
+  try {
+    const logs = await NotificationLog.find().sort({ createdAt: -1 }).limit(100);
+    res.status(200).json(logs);
+  } catch (error) {
+    console.error("Get Notification Logs Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Resend a specific notification
+exports.resendNotification = async (req, res) => {
+  try {
+    const logId = req.params.id;
+    const log = await NotificationLog.findById(logId);
+    if (!log) {
+      return res.status(404).json({ message: "Notification log not found." });
+    }
+
+    log.attempts += 1;
+    log.status = "PENDING";
+    await log.save();
+
+    try {
+      await sendMail(log.recipientEmail, log.subject, log.content);
+      log.status = "DELIVERED";
+      log.deliveredAt = new Date();
+      log.errorMessage = "";
+    } catch (err) {
+      log.status = "FAILED";
+      log.errorMessage = err.message || "Unknown error";
+    }
+    await log.save();
+
+    res.status(200).json({ message: "Resend attempt complete.", log });
+  } catch (error) {
+    console.error("Resend Notification Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Resend HR Activation Link (Generates a new token)
+exports.resendHRActivation = async (req, res) => {
+  try {
+    const hrId = req.params.id;
+    const hrUser = await User.findById(hrId);
+
+    if (!hrUser || hrUser.role !== "HR") {
+      return res.status(404).json({ message: "HR not found." });
+    }
+    if (hrUser.password !== "PENDING_SETUP") {
+      return res.status(400).json({ message: "HR has already set up their password." });
+    }
+    if (!hrUser.isApproved) {
+      return res.status(400).json({ message: "HR is not approved yet." });
+    }
+
+    const { rawToken, tokenHash, tokenExpires } = generateActivationToken();
+
+    hrUser.activationTokenHash = tokenHash;
+    hrUser.activationTokenExpires = tokenExpires;
+    await hrUser.save();
+
+    const activationLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${hrUser._id}`;
+    const subject = "Your CampusBridge HR Account Setup Link (Resent)";
+    const approveHtml = `
+      <h2>Welcome to CampusBridge!</h2>
+      <p>Here is your new setup link to activate your HR account.</p>
+      <p>Please click the link below to set up your password:</p>
+      <a href="${activationLink}" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Activate Account</a>
+      <p>This link will expire in 24 hours.</p>
+    `;
+
+    const log = new NotificationLog({
+      recipientEmail: hrUser.email,
+      subject,
+      content: approveHtml,
+      type: "HR_ACTIVATION",
+      status: "PENDING",
+      attempts: 1
+    });
+
+    try {
+      await sendMail(hrUser.email, subject, approveHtml);
+      log.status = "DELIVERED";
+      log.deliveredAt = new Date();
+    } catch (err) {
+      console.error("Failed to send HR activation resent email", err);
+      log.status = "FAILED";
+      log.errorMessage = err.message || "Unknown error";
+    }
+    await log.save();
+
+    res.status(200).json({
+      message: "HR setup link regenerated and email dispatched.",
+      activationLink
+    });
+  } catch (error) {
+    console.error("Resend HR Activation Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

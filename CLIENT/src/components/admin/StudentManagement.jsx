@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Shield, RefreshCw, X, Save, Eye } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Shield, RefreshCw, X, Save, Eye, ExternalLink } from 'lucide-react';
 import api from '../../services/api';
 
 const StudentManagement = () => {
@@ -21,6 +21,8 @@ const StudentManagement = () => {
     rollNumber: '',
     branch: '',
     passoutYear: new Date().getFullYear(),
+    cgpa: 0,
+    activeBacklogs: 0,
   });
 
   const getAuthHeader = () => ({
@@ -55,7 +57,7 @@ const StudentManagement = () => {
     try {
       await api.post('/admin/students/manual', formData, getAuthHeader());
       setShowAddModal(false);
-      setFormData({ firstName: '', lastName: '', email: '', rollNumber: '', branch: '', passoutYear: new Date().getFullYear() });
+      setFormData({ firstName: '', lastName: '', email: '', rollNumber: '', branch: '', passoutYear: new Date().getFullYear(), cgpa: 0, activeBacklogs: 0 });
 
       fetchStudents();
     } catch (error) {
@@ -83,6 +85,8 @@ const StudentManagement = () => {
       rollNumber: student.rollNumber,
       branch: student.branch,
       passoutYear: student.passoutYear,
+      cgpa: student.cgpa || 0,
+      activeBacklogs: student.activeBacklogs || 0,
     });
     setShowEditModal(true);
   };
@@ -178,7 +182,7 @@ const StudentManagement = () => {
           </div>
           <button
             onClick={() => {
-              setFormData({ firstName: '', lastName: '', email: '', rollNumber: '', branch: '', passoutYear: new Date().getFullYear() });
+              setFormData({ firstName: '', lastName: '', email: '', rollNumber: '', branch: '', passoutYear: new Date().getFullYear(), cgpa: 0, activeBacklogs: 0 });
               setShowAddModal(true);
             }}
             className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap"
@@ -312,6 +316,14 @@ const StudentManagement = () => {
                   <label className="text-sm text-gray-400">Passout Year</label>
                   <input type="number" name="passoutYear" value={formData.passoutYear} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-400">CGPA</label>
+                  <input type="number" step="0.01" min="0" max="10" name="cgpa" value={formData.cgpa} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-400">Active Backlogs</label>
+                  <input type="number" min="0" name="activeBacklogs" value={formData.activeBacklogs} onChange={handleInputChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00ED64]" />
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-800">
@@ -331,76 +343,154 @@ const StudentManagement = () => {
       {/* View Modal */}
       {showViewModal && viewData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#112240] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-800 animate-fadeIn">
-            <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-[#0A192F]/50">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                Student Details
-              </h3>
-              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-white transition-colors">
-                <X size={24} />
+          <div className="bg-[#112240] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-800 animate-fadeIn">
+            
+            {/* Header */}
+            <div className="px-8 py-6 border-b border-gray-800 flex justify-between items-start bg-[#0A192F]/80 shrink-0">
+              <div className="flex gap-5 items-center">
+                <div className="w-16 h-16 rounded-full bg-[#00ED64]/10 flex items-center justify-center text-[#00ED64] text-2xl font-bold border border-[#00ED64]/20 shadow-inner">
+                  {viewData.firstName[0]}{viewData.lastName[0]}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                    {viewData.firstName} {viewData.lastName}
+                    <span className={`text-xs px-2.5 py-1 rounded-full border font-semibold ${viewData.status === 'ACTIVE' ? 'bg-[#00ED64]/10 text-[#00ED64] border-[#00ED64]/20' : viewData.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                      {viewData.status}
+                    </span>
+                  </h3>
+                  <p className="text-gray-400 mt-1 flex items-center gap-2">
+                    <span>{viewData.email}</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="font-mono text-gray-300">{viewData.rollNumber}</span>
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-white transition-colors bg-gray-800/50 hover:bg-gray-700/80 p-2 rounded-lg">
+                <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Full Name</span>
-                  <span className="text-white font-semibold">{viewData.firstName} {viewData.lastName}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Email</span>
-                  <span className="text-[#00ED64]">{viewData.email}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Enrollment No.</span>
-                  <span className="text-white">{viewData.rollNumber}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Branch</span>
-                  <span className="text-white">{viewData.branch || '-'}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Passout Year</span>
-                  <span className="text-white">{viewData.passoutYear}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">CGPA</span>
-                  <span className="text-white">{viewData.cgpa || '0'}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Active Backlogs</span>
-                  <span className="text-white">{viewData.activeBacklogs || '0'}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Account Status</span>
-                  <span className={`font-semibold ${viewData.status === 'ACTIVE' ? 'text-[#00ED64]' : viewData.status === 'PENDING' ? 'text-yellow-500' : 'text-red-500'}`}>
-                    {viewData.status}
-                  </span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Apply Lock</span>
-                  <span className="text-white">{viewData.isLocked ? 'Locked' : 'Allowed'}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Created At</span>
-                  <span className="text-white">{new Date(viewData.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 font-medium mb-1">Last Updated At</span>
-                  <span className="text-white">{new Date(viewData.updatedAt).toLocaleDateString()}</span>
-                </div>
-                {viewData.createdBy && (
-                  <div className="col-span-2">
-                    <span className="block text-gray-500 font-medium mb-1">Added By</span>
-                    <span className="text-white bg-gray-800 px-2 py-1 rounded text-xs">{viewData.createdBy.role}: {viewData.createdBy.email}</span>
+            {/* Content Area */}
+            <div className="p-8 overflow-y-auto bg-[#0A192F]/30 flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Academic Details Card */}
+                  <div className="bg-[#112240] border border-gray-800 p-6 rounded-xl shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[#00ED64]/50 group-hover:bg-[#00ED64] transition-colors"></div>
+                    <h4 className="text-white font-semibold mb-5 flex items-center gap-2 border-b border-gray-800/50 pb-3">
+                      Academic Profile
+                    </h4>
+                    <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                      <div>
+                        <span className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider font-semibold">Branch</span>
+                        <span className="text-gray-200">{viewData.branch || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider font-semibold">Passout Year</span>
+                        <span className="text-gray-200">{viewData.passoutYear}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider font-semibold">CGPA</span>
+                        <span className="text-white font-medium text-lg">{viewData.cgpa || '0'}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[11px] text-gray-500 mb-1.5 uppercase tracking-wider font-semibold">Active Backlogs</span>
+                        <span className={`font-medium text-lg ${viewData.activeBacklogs > 0 ? 'text-red-400' : 'text-[#00ED64]'}`}>{viewData.activeBacklogs || '0'}</span>
+                      </div>
+                    </div>
                   </div>
-                )}
-                {viewData.updatedBy && (
-                  <div className="col-span-2">
-                    <span className="block text-gray-500 font-medium mb-1">Last Updated By</span>
-                    <span className="text-white bg-gray-800 px-2 py-1 rounded text-xs">{viewData.updatedBy.role}: {viewData.updatedBy.email}</span>
+
+                  {/* Portfolio & Contact Card */}
+                  <div className="bg-[#112240] border border-gray-800 p-6 rounded-xl shadow-sm">
+                    <h4 className="text-white font-semibold mb-5 flex items-center gap-2 border-b border-gray-800/50 pb-3">
+                      Contact & Portfolio
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center bg-[#0A192F]/50 p-3 rounded-lg border border-gray-800/50">
+                        <span className="text-sm text-gray-400">Phone</span>
+                        <span className="text-gray-200 text-sm font-medium">{viewData.phone || '-'}</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-[#0A192F]/50 p-3 rounded-lg border border-gray-800/50">
+                        <span className="text-sm text-gray-400">LinkedIn</span>
+                        {viewData.linkedinUrl ? <a href={viewData.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1.5 font-medium transition-colors">View Profile <ExternalLink size={14}/></a> : <span className="text-gray-600 text-sm">-</span>}
+                      </div>
+                      <div className="flex justify-between items-center bg-[#0A192F]/50 p-3 rounded-lg border border-gray-800/50">
+                        <span className="text-sm text-gray-400">GitHub</span>
+                        {viewData.githubUrl ? <a href={viewData.githubUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1.5 font-medium transition-colors">View Profile <ExternalLink size={14}/></a> : <span className="text-gray-600 text-sm">-</span>}
+                      </div>
+                      <div className="flex justify-between items-center bg-[#00ED64]/5 p-3 rounded-lg border border-[#00ED64]/10">
+                        <span className="text-sm text-gray-400">Resume</span>
+                        {viewData.resumeUrl ? <a href={viewData.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-[#00ED64] hover:text-[#00c954] text-sm flex items-center gap-1.5 font-bold transition-colors">Download Resume <ExternalLink size={14}/></a> : <span className="text-gray-600 text-sm">-</span>}
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Skills Card */}
+                  <div className="bg-[#112240] border border-gray-800 p-6 rounded-xl shadow-sm">
+                    <h4 className="text-white font-semibold mb-5 flex items-center gap-2 border-b border-gray-800/50 pb-3">
+                      Skills
+                    </h4>
+                    <div className="flex flex-wrap gap-2.5">
+                      {viewData.skills && viewData.skills.length > 0 ? (
+                        viewData.skills.map((skill, i) => (
+                          <span key={i} className="bg-[#0A192F] text-gray-300 border border-gray-700 px-3.5 py-1.5 rounded-full text-xs font-medium tracking-wide">
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <div className="w-full text-center py-6 border border-dashed border-gray-800 rounded-lg">
+                          <span className="text-gray-500 text-sm italic">No skills listed yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* System Details Card */}
+                  <div className="bg-[#112240] border border-gray-800 p-6 rounded-xl shadow-sm">
+                    <h4 className="text-gray-400 font-semibold mb-5 flex items-center gap-2 border-b border-gray-800/50 pb-3">
+                      System Details
+                    </h4>
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-center bg-[#0A192F] p-4 rounded-xl border border-gray-800">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${viewData.isLocked ? 'bg-red-500/10 text-red-500' : 'bg-[#00ED64]/10 text-[#00ED64]'}`}>
+                            <Shield size={18} />
+                          </div>
+                          <div>
+                            <span className="block text-sm text-gray-300 font-medium">Application Lock</span>
+                            <span className="block text-xs text-gray-500 mt-0.5">Controls if student can apply</span>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${viewData.isLocked ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-[#00ED64]/20 text-[#00ED64] border border-[#00ED64]/30'}`}>
+                          {viewData.isLocked ? 'LOCKED' : 'ALLOWED'}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 bg-[#0A192F]/50 p-4 rounded-xl border border-gray-800/50">
+                        <div>
+                          <span className="block text-[11px] text-gray-500 mb-1 uppercase tracking-wider font-semibold">Created At</span>
+                          <span className="text-gray-300 text-sm">{new Date(viewData.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div>
+                          <span className="block text-[11px] text-gray-500 mb-1 uppercase tracking-wider font-semibold">Last Updated</span>
+                          <span className="text-gray-300 text-sm">{new Date(viewData.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                        {viewData.createdBy && (
+                          <div className="col-span-2 pt-2 border-t border-gray-800/50">
+                            <span className="block text-[11px] text-gray-500 mb-1 uppercase tracking-wider font-semibold">Added By</span>
+                            <span className="text-gray-400 text-xs font-mono bg-[#0A192F] px-2 py-1 rounded inline-block border border-gray-800">{viewData.createdBy.role}: {viewData.createdBy.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
           </div>

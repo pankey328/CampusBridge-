@@ -4,7 +4,7 @@ import { Plus, Search, Eye, Edit2, Trash2, Calendar, MapPin, Building2, Briefcas
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
-const JobDrives = () => {
+const HRJobDrives = () => {
   const [drives, setDrives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,7 +17,7 @@ const JobDrives = () => {
 
   const fetchDrives = async () => {
     try {
-      const response = await api.get('/admin/job-drives', getAuthHeader());
+      const response = await api.get('/hr/job-drives', getAuthHeader());
       setDrives(response.data.data);
     } catch (error) {
       toast.error('Failed to fetch job drives');
@@ -33,7 +33,7 @@ const JobDrives = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this job drive? This action cannot be undone.")) return;
     try {
-      await api.delete(`/admin/job-drives/${id}`, getAuthHeader());
+      await api.delete(`/hr/job-drives/${id}`, getAuthHeader());
       toast.success("Job drive deleted successfully");
       fetchDrives();
     } catch (error) {
@@ -44,7 +44,7 @@ const JobDrives = () => {
   const handleStatusUpdate = async (id, newStatus) => {
     if (newStatus === 'CANCELLED' && !window.confirm("Are you sure you want to cancel this drive? This will notify scheduled students.")) return;
     try {
-      await api.put(`/admin/job-drives/${id}`, { status: newStatus }, getAuthHeader());
+      await api.put(`/hr/job-drives/${id}`, { status: newStatus }, getAuthHeader());
       toast.success(`Job drive marked as ${newStatus}`);
       fetchDrives();
     } catch (error) {
@@ -55,7 +55,7 @@ const JobDrives = () => {
   const handleCompleteDrive = async (id) => {
     if (!window.confirm("Are you sure you want to mark this drive as COMPLETED?\n\nAny remaining applicants in the APPLIED or SHORTLISTED stages will be automatically marked as REJECTED and notified.")) return;
     try {
-      const response = await api.put(`/admin/job-drives/${id}/complete`, {}, getAuthHeader());
+      const response = await api.put(`/hr/job-drives/${id}/complete`, {}, getAuthHeader());
       toast.success(`Job drive marked as COMPLETED. Auto-rejected ${response.data.autoRejectedCount || 0} pending applicants.`);
       fetchDrives();
     } catch (error) {
@@ -79,7 +79,7 @@ const JobDrives = () => {
           <p className="text-[var(--color-text-secondary)]">Manage campus placement drives, eligibility, and rounds.</p>
         </div>
         <button
-          onClick={() => navigate('/admin/job-drives/create')}
+          onClick={() => navigate('/hr/job-drives/create')}
           className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-6 rounded-lg transition-colors"
         >
           <Plus size={20} />
@@ -129,7 +129,7 @@ const JobDrives = () => {
               <Briefcase className="w-16 h-16 mb-4 opacity-50" />
               <p className="text-lg">No job drives found.</p>
               <button
-                onClick={() => navigate('/admin/job-drives/create')}
+                onClick={() => navigate('/hr/job-drives/create')}
                 className="mt-4 text-[#00ED64] hover:underline"
               >
                 Create the first one
@@ -170,56 +170,45 @@ const JobDrives = () => {
                       <div className="text-sm font-semibold text-white">
                         ₹{drive.packageLPA} LPA
                       </div>
-                      <div className="text-xs font-semibold px-2 py-1 rounded bg-gray-800 text-gray-300">
+                      <div className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                        drive.status === 'ACTIVE' ? 'bg-[#00ED64]/10 text-[#00ED64] border-[#00ED64]/20' : 
+                        drive.status === 'PENDING_APPROVAL' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
+                        drive.status === 'CANCELLED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                        drive.status === 'COMPLETED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                        'bg-gray-800 text-gray-300 border-gray-700'
+                      }`}>
                         {drive.status}
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 justify-end pt-2">
-                      {drive.status === 'PENDING_APPROVAL' && (
-                        <>
-                          <button onClick={() => handleStatusUpdate(drive._id, 'ACTIVE')} className="px-3 py-1 text-xs font-bold rounded bg-green-500/20 text-green-400 hover:bg-green-500/30">
-                            Approve
-                          </button>
-                          <button onClick={() => handleStatusUpdate(drive._id, 'REJECTED')} className="px-3 py-1 text-xs font-bold rounded bg-red-500/20 text-red-400 hover:bg-red-500/30">
-                            Reject
-                          </button>
-                        </>
+                      {drive.status === 'ACTIVE' && new Date(drive.deadline) < new Date() && (
+                        <button onClick={() => handleCompleteDrive(drive._id)} className="px-3 py-1 text-xs font-bold rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+                          Mark as Completed
+                        </button>
                       )}
-                      
-                      {drive.status === 'ACTIVE' && (
-                        <>
-                          {new Date(drive.deadline) < new Date() && (
-                            <button onClick={() => handleCompleteDrive(drive._id)} className="px-3 py-1 text-xs font-bold rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
-                              Mark as Completed
-                            </button>
-                          )}
-                          <button onClick={() => handleStatusUpdate(drive._id, 'CANCELLED')} className="px-3 py-1 text-xs font-bold rounded bg-red-500/20 text-red-400 hover:bg-red-500/30">
-                            Cancel Drive
-                          </button>
-                        </>
+
+                      {(drive.status === 'ACTIVE' || drive.status === 'PENDING_APPROVAL') && (
+                        <button onClick={() => handleDelete(drive._id)} className="px-3 py-1 text-xs font-bold rounded bg-red-500/20 text-red-400 hover:bg-red-500/30">
+                          Cancel Drive
+                        </button>
                       )}
 
                       <button
-                        onClick={() => navigate(`/admin/job-drives/${drive._id}/applications`)}
-                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded transition-colors"
-                        title="View Applications"
+                        onClick={() => navigate(`/hr/job-drives/${drive._id}/applications`)}
+                        disabled={['PENDING_APPROVAL', 'DRAFT', 'CANCELLED'].includes(drive.status)}
+                        className={`p-2 rounded transition-colors ${['PENDING_APPROVAL', 'DRAFT', 'CANCELLED'].includes(drive.status) ? 'text-gray-600 cursor-not-allowed opacity-50' : 'text-gray-400 hover:text-blue-500 hover:bg-blue-500/10'}`}
+                        title={['PENDING_APPROVAL', 'DRAFT', 'CANCELLED'].includes(drive.status) ? "No applications available" : "View Applications"}
                       >
                         <Users size={16} />
                       </button>
                       <button
-                        onClick={() => navigate(`/admin/job-drives/edit/${drive._id}`)}
-                        className="p-2 text-gray-400 hover:text-[#00ED64] hover:bg-[#00ED64]/10 rounded transition-colors"
-                        title="Edit Drive"
+                        onClick={() => navigate(`/hr/job-drives/edit/${drive._id}`)}
+                        disabled={['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(drive.status)}
+                        className={`p-2 rounded transition-colors ${['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(drive.status) ? 'text-gray-600 cursor-not-allowed opacity-50' : 'text-gray-400 hover:text-[#00ED64] hover:bg-[#00ED64]/10'}`}
+                        title={['ACTIVE', 'COMPLETED', 'CANCELLED'].includes(drive.status) ? "Cannot edit drive in this state" : "Edit Drive"}
                       >
                         <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(drive._id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                        title="Delete Drive"
-                      >
-                        <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
@@ -233,4 +222,4 @@ const JobDrives = () => {
   );
 };
 
-export default JobDrives;
+export default HRJobDrives;

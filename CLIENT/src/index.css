@@ -3,8 +3,8 @@
 @theme {
   --color-brand-primary: var(--color-brand-primary);
   --color-brand-primary-hover: var(--color-brand-primary-hover);
-  --color-bg-dark: var(--color-bg-primary); /* keeping legacy name for fallback */
-  --color-bg-card: var(--color-bg-secondary); /* keeping legacy name for fallback */
+  --color-bg-dark: var(--color-bg-primary); 
+  --color-bg-card: var(--color-bg-secondary); 
   --color-bg-input: var(--color-bg-input);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
@@ -14,7 +14,7 @@
 }
 
 :root {
-  /* Light Theme (MongoDB Atlas Inspired) */
+  /* Light Theme */
   --color-brand-primary: #00ED64;
   --color-brand-primary-hover: #00C853;
   
@@ -22,7 +22,7 @@
   --color-bg-secondary: #F8F9FA;
   --color-bg-input: #FFFFFF;
   
-  --color-text-primary: #001E2B; /* Atlas Slate */
+  --color-text-primary: #001E2B;
   --color-text-secondary: #5C6C75;
   
   --color-border: #E8EDF1;

@@ -250,7 +250,11 @@ const HRManagement = () => {
                   </td>
                   <td className="px-6 py-4">
                     {hr.isApproved ? (
-                      <span className="bg-[#00ED64]/10 text-[#00ED64] px-2 py-1 rounded text-xs font-medium border border-[#00ED64]/20">Active</span>
+                      hr.status === 'PENDING' ? (
+                        <span className="bg-yellow-900/50 text-yellow-500 px-2 py-1 rounded text-xs font-medium border border-yellow-800/50">Pending Setup</span>
+                      ) : (
+                        <span className="bg-[#00ED64]/10 text-[#00ED64] px-2 py-1 rounded text-xs font-medium border border-[#00ED64]/20">Active</span>
+                      )
                     ) : (
                       <span className="bg-yellow-900/50 text-yellow-500 px-2 py-1 rounded text-xs font-medium border border-yellow-800/50">Pending Review</span>
                     )}
@@ -270,6 +274,23 @@ const HRManagement = () => {
                         <button onClick={() => handleView(hr.id)} title="View Details" className="text-gray-400 hover:text-white transition-colors">
                           <Eye size={18} />
                         </button>
+
+                        {hr.status === 'PENDING' && (
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await api.post(`/admin/hr/${hr.id}/resend-activation`, {}, getAuthHeader());
+                                alert('New setup link generated and sent via email!');
+                              } catch (err) {
+                                alert('Failed to resend setup link.');
+                              }
+                            }} 
+                            title="Resend Setup Link" 
+                            className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                          >
+                            <Mail size={18} />
+                          </button>
+                        )}
 
                         <button onClick={() => openEditModal(hr)} title="Edit Details" className="text-blue-400 hover:text-blue-300 transition-colors">
                           <Edit2 size={18} />

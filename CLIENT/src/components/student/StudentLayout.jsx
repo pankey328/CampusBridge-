@@ -2,10 +2,10 @@ import React from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/authSlice';
-import { LayoutDashboard, Users, Briefcase, LogOut, Settings, ClipboardList, Shield, Sun, Moon, Mail } from 'lucide-react';
+import { LayoutDashboard, Briefcase, LogOut, Settings, Sun, Moon, UserCircle } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 
-const AdminLayout = () => {
+const StudentLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -18,21 +18,12 @@ const AdminLayout = () => {
   };
 
   const navItems = [
-    { path: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Overview' },
-    { path: '/admin/students', icon: <Users size={20} />, label: 'Student Management' },
-    { path: '/admin/students/bulk-import', icon: <Users size={20} />, label: 'Bulk Import Students' },
-    { path: '/admin/hr', icon: <Briefcase size={20} />, label: 'HR Management' },
-    { path: '/admin/job-drives', icon: <ClipboardList size={20} />, label: 'Job Drives' },
+    { path: '/student/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+    { path: '/student/drives', icon: <Briefcase size={20} />, label: 'Job Drives' },
+    { path: '/student/applications', icon: <Briefcase size={20} />, label: 'My Applications' },
+    { path: '/student/profile', icon: <UserCircle size={20} />, label: 'My Profile' },
+    { path: '/student/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
-
-  const role = localStorage.getItem('role');
-
-  if (role === 'SUPERADMIN') {
-    navItems.push({ path: '/admin/tpos', icon: <Shield size={20} />, label: 'TPO Management' });
-  }
-
-  navItems.push({ path: '/admin/notifications', icon: <Mail size={20} />, label: 'Email Logs' });
-  navItems.push({ path: '/admin/settings', icon: <Settings size={20} />, label: 'Settings' });
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex overflow-hidden font-sans transition-colors duration-300">
@@ -90,8 +81,8 @@ const AdminLayout = () => {
         {/* Header */}
         <header className="h-20 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex items-center justify-between px-8 z-10 transition-colors duration-300">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Admin Portal</h1>
-            <p className="text-sm text-[var(--color-text-secondary)] mt-1">Manage system, users and drives</p>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Student Portal</h1>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">Discover and apply to job drives</p>
           </div>
         </header>
 
@@ -109,4 +100,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default StudentLayout;
