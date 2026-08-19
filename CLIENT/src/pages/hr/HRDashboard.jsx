@@ -11,10 +11,8 @@ const HRDashboard = () => {
     hiredCandidates: 0
   });
 
-  // Placeholder for real stats fetching
   useEffect(() => {
-    // In a real app, we'd fetch HR specific stats here.
-    // For now, we'll leave it as 0 or mock data
+    // Fetch data
   }, []);
 
   return (

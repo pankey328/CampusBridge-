@@ -211,18 +211,7 @@ const CreateJobDrive = () => {
               <input type="date" name="deadline" required value={formData.deadline} onChange={handleChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#00ED64]" />
             </div>
 
-            {userRole !== 'HR' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400">Status</label>
-                <select name="status" value={formData.status} onChange={handleChange} className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#00ED64]">
-                  <option value="DRAFT">Draft</option>
-                  <option value="PENDING_APPROVAL">Pending Approval</option>
-                  <option value="ACTIVE">Active (Published)</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
-              </div>
-            )}
+
           </div>
         </div>
 
@@ -296,16 +285,15 @@ const CreateJobDrive = () => {
 
         {/* Submit */}
         <div className="flex justify-end space-x-4 pt-6">
+          <button type="button" onClick={(e) => handleSubmit(e, 'DRAFT')} disabled={loading} className="px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 font-semibold transition-colors">
+            Save as Draft
+          </button>
+          
           {userRole === 'HR' ? (
-            <>
-              <button type="button" onClick={(e) => handleSubmit(e, 'DRAFT')} disabled={loading} className="px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 font-semibold transition-colors">
-                Save as Draft
-              </button>
-              <button type="button" onClick={(e) => handleSubmit(e, 'PENDING_APPROVAL')} disabled={loading} className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50">
-                <Save size={20} />
-                <span>Submit for Approval</span>
-              </button>
-            </>
+            <button type="button" onClick={(e) => handleSubmit(e, 'PENDING_APPROVAL')} disabled={loading} className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50">
+              <Save size={20} />
+              <span>Submit for Approval</span>
+            </button>
           ) : (
             <button type="button" onClick={(e) => handleSubmit(e, 'ACTIVE')} disabled={loading} className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50">
               <Save size={20} />

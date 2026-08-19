@@ -14,6 +14,7 @@ const DriveApplications = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [driveStatus, setDriveStatus] = useState('');
   const [selectedAppIds, setSelectedAppIds] = useState([]);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -31,6 +32,7 @@ const DriveApplications = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setApplications(data.data);
+      if (data.driveStatus) setDriveStatus(data.driveStatus);
     } catch (error) {
       toast.error('Failed to load applications');
     } finally {
@@ -99,6 +101,8 @@ const DriveApplications = () => {
     return matchesTab && matchesSearch;
   });
 
+  const isDriveImmutable = ['CANCELLED', 'COMPLETED', 'DRAFT', 'PENDING_APPROVAL', 'REJECTED'].includes(driveStatus);
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'APPLIED': return <span className="px-2 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded text-xs font-medium">Applied</span>;
@@ -165,7 +169,7 @@ const DriveApplications = () => {
       </div>
 
       {/* Bulk Actions Floating Bar */}
-      {selectedAppIds.length > 0 && (
+      {selectedAppIds.length > 0 && !isDriveImmutable && (
         <div className="bg-[#112240] border border-[#00ED64]/50 rounded-xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(0,237,100,0.1)] animate-fade-in-up">
           <div className="flex items-center text-white font-medium">
             <CheckSquare className="text-[#00ED64] mr-3" size={20} />
@@ -204,12 +208,14 @@ const DriveApplications = () => {
             <thead>
               <tr className="bg-black/20 text-[var(--color-text-secondary)] text-sm border-b border-[var(--color-border)]">
                 <th className="p-4 w-12">
-                  <input 
-                    type="checkbox" 
-                    className="rounded border-gray-600 bg-[#0A192F] checked:bg-[#00ED64] cursor-pointer"
-                    checked={selectedAppIds.length === filteredApplications.length && filteredApplications.length > 0}
-                    onChange={toggleSelectAll}
-                  />
+                  {!isDriveImmutable && (
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-600 bg-[#0A192F] checked:bg-[#00ED64] cursor-pointer"
+                      checked={selectedAppIds.length === filteredApplications.length && filteredApplications.length > 0}
+                      onChange={toggleSelectAll}
+                    />
+                  )}
                 </th>
                 <th className="p-4 font-medium">Candidate Info</th>
                 <th className="p-4 font-medium">Academics</th>
@@ -229,12 +235,14 @@ const DriveApplications = () => {
                 filteredApplications.map((app) => (
                   <tr key={app._id} className="border-b border-[var(--color-border)] hover:bg-white/5 transition-colors">
                     <td className="p-4">
-                      <input 
-                        type="checkbox" 
-                        className="rounded border-gray-600 bg-[#0A192F] checked:bg-[#00ED64] cursor-pointer"
-                        checked={selectedAppIds.includes(app._id)}
-                        onChange={() => toggleSelect(app._id)}
-                      />
+                      {!isDriveImmutable && (
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-600 bg-[#0A192F] checked:bg-[#00ED64] cursor-pointer"
+                          checked={selectedAppIds.includes(app._id)}
+                          onChange={() => toggleSelect(app._id)}
+                        />
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="font-semibold text-white">{app.firstName} {app.lastName}</div>
@@ -292,18 +300,20 @@ const DriveApplications = () => {
                         <div className="cursor-pointer">
                           {getStatusBadge(app.status)}
                         </div>
-                        {/* Custom Dropdown on Hover */}
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-[#112240] border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all z-10 py-1">
-                          {UPDATE_STATUSES.map(s => (
-                            <button
-                              key={s}
-                              onClick={() => handleStatusChange(app._id, s)}
-                              className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 ${app.status === s ? 'text-[#00ED64]' : 'text-gray-300'}`}
-                            >
-                              {s.replace('_', ' ')}
-                            </button>
-                          ))}
-                        </div>
+                        {/* Dropdown on Hover */}
+                        {!isDriveImmutable && (
+                          <div className="absolute top-full left-0 mt-1 w-48 bg-[#112240] border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all z-10 py-1">
+                            {UPDATE_STATUSES.map(s => (
+                              <button
+                                key={s}
+                                onClick={() => handleStatusChange(app._id, s)}
+                                className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors ${app.status === s ? 'text-[#00ED64] bg-[#00ED64]/10' : 'text-gray-300'}`}
+                              >
+                                {s.replace('_', ' ')}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

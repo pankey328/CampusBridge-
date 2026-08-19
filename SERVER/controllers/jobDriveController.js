@@ -77,8 +77,15 @@ exports.createJobDrive = async (req, res) => {
 // Get All Job Drives
 exports.getAllJobDrives = async (req, res) => {
   try {
-    const jobDrives = await JobDrive.find()
-      .populate("companyId", "name")
+    const query = {
+      $or: [
+        { status: { $ne: 'DRAFT' } },
+        { status: 'DRAFT', createdBy: req.user.id }
+      ]
+    };
+
+    const jobDrives = await JobDrive.find(query)
+      .populate("companyId", "name logo")
       .populate("postedByHR", "email")
       .sort({ createdAt: -1 });
 
@@ -130,14 +137,15 @@ exports.updateJobDrive = async (req, res) => {
   session.startTransaction();
 
   try {
-    const jobDrive = await JobDrive.findById(req.params.id);
+    const jobDrive = await JobDrive.findById(req.params.id).populate("postedByHR", "email");
     if (!jobDrive) {
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({ message: "Job drive not found" });
     }
 
-    if (req.user.role === "HR" && jobDrive.postedByHR?.toString() !== req.user.id) {
+    const postedById = jobDrive.postedByHR?._id ? jobDrive.postedByHR._id.toString() : jobDrive.postedByHR?.toString();
+    if (req.user.role === "HR" && postedById !== req.user.id) {
       await session.abortTransaction();
       session.endSession();
       return res.status(403).json({ message: "Not authorized to update this job drive" });
@@ -149,8 +157,41 @@ exports.updateJobDrive = async (req, res) => {
       return res.status(403).json({ message: "Active job drives cannot be edited. Please contact the Admin." });
     }
 
-    Object.assign(jobDrive, req.body);
+    for (const key in req.body) {
+      jobDrive[key] = req.body[key];
+    }
     jobDrive.updatedBy = req.user.id;
+
+    if (req.body.status === "PENDING_APPROVAL" || req.body.status === "ACTIVE") {
+      jobDrive.rejectionReason = "";
+    }
+
+    if (req.body.status === "REJECTED" && req.body.rejectionReason) {
+      const subject = "Job Drive Rejected";
+      const content = `<h3>Job Drive Update</h3><p>Your job drive submission for <b>${jobDrive.title}</b> has been returned by the Placement Cell.</p>
+                       <p><b>Reason:</b> ${req.body.rejectionReason}</p>
+                       <p>Please review the feedback, make the necessary corrections, and resubmit.</p>`;
+      
+      const log = new NotificationLog({
+        recipientEmail: jobDrive.postedByHR.email,
+        subject,
+        content,
+        type: "GENERAL",
+        status: "PENDING",
+        attempts: 1
+      });
+
+      try {
+        await sendMail(jobDrive.postedByHR.email, subject, content);
+        log.status = "DELIVERED";
+        log.deliveredAt = new Date();
+      } catch (err) {
+        console.error(`Failed to send rejection email to ${jobDrive.postedByHR.email}`, err);
+        log.status = "FAILED";
+        log.errorMessage = err.message || "Unknown error";
+      }
+      await log.save({ session });
+    }
 
     if (req.body.status === "CANCELLED") {
 
@@ -302,7 +343,7 @@ exports.getDriveApplications = async (req, res) => {
       };
     });
 
-    res.status(200).json({ message: "Applications fetched successfully", data: enrichedApplications });
+    res.status(200).json({ message: "Applications fetched successfully", data: enrichedApplications, driveStatus: drive.status });
   } catch (error) {
     console.error("Get Drive Applications Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -321,18 +362,31 @@ exports.updateApplicationStatus = async (req, res) => {
     application.status = status;
     await application.save();
 
-    if (status === 'REJECTED' || status === 'HIRED') {
-      const subject = status === 'REJECTED' ? 'Update on your Application' : 'Congratulations! You have been Selected';
-      const content = status === 'REJECTED' 
-        ? `<p>Thank you for your interest in the <b>${application.jobDriveId.title}</b> role. We regret to inform you that we will not be moving forward with your application.</p>`
-        : `<p>Congratulations! You have been selected for the <b>${application.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
+    if (status === 'REJECTED' || status === 'HIRED' || status === 'SHORTLISTED') {
+      let subject = '';
+      let content = '';
+      let logType = '';
+
+      if (status === 'REJECTED') {
+        subject = 'Update on your Application';
+        content = `<p>Thank you for your interest in the <b>${application.jobDriveId.title}</b> role. We regret to inform you that we will not be moving forward with your application.</p>`;
+        logType = 'APPLICATION_REJECTED';
+      } else if (status === 'HIRED') {
+        subject = 'Congratulations! You have been Selected';
+        content = `<p>Congratulations! You have been selected for the <b>${application.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
+        logType = 'APPLICATION_HIRED';
+      } else if (status === 'SHORTLISTED') {
+        subject = 'Update on your Application: Shortlisted!';
+        content = `<p>Congratulations! You have been shortlisted for the <b>${application.jobDriveId.title}</b> role! Please stay tuned for further updates regarding the next rounds.</p>`;
+        logType = 'APPLICATION_SHORTLISTED';
+      }
 
       const log = new NotificationLog({
         recipientEmail: application.studentId.email,
         studentId: application.studentId._id,
         subject,
         content,
-        type: status === 'REJECTED' ? 'APPLICATION_REJECTED' : 'APPLICATION_HIRED',
+        type: logType,
         status: "PENDING",
         attempts: 1
       });
@@ -374,23 +428,36 @@ exports.bulkUpdateApplicationStatus = async (req, res) => {
       { $set: { status } }
     );
 
-    if (status === 'REJECTED' || status === 'HIRED') {
+    if (status === 'REJECTED' || status === 'HIRED' || status === 'SHORTLISTED') {
       const applications = await Application.find({ _id: { $in: applicationIds } })
         .populate('studentId', 'email')
         .populate('jobDriveId', 'title');
 
       for (const app of applications) {
-        const subject = status === 'REJECTED' ? 'Update on your Application' : 'Congratulations! You have been Selected';
-        const content = status === 'REJECTED' 
-          ? `<p>Thank you for your interest in the <b>${app.jobDriveId.title}</b> role. We regret to inform you that we will not be moving forward with your application.</p>`
-          : `<p>Congratulations! You have been selected for the <b>${app.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
+        let subject = '';
+        let content = '';
+        let logType = '';
+
+        if (status === 'REJECTED') {
+          subject = 'Update on your Application';
+          content = `<p>Thank you for your interest in the <b>${app.jobDriveId.title}</b> role. We regret to inform you that we will not be moving forward with your application.</p>`;
+          logType = 'APPLICATION_REJECTED';
+        } else if (status === 'HIRED') {
+          subject = 'Congratulations! You have been Selected';
+          content = `<p>Congratulations! You have been selected for the <b>${app.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
+          logType = 'APPLICATION_HIRED';
+        } else if (status === 'SHORTLISTED') {
+          subject = 'Update on your Application: Shortlisted!';
+          content = `<p>Congratulations! You have been shortlisted for the <b>${app.jobDriveId.title}</b> role! Please stay tuned for further updates regarding the next rounds.</p>`;
+          logType = 'APPLICATION_SHORTLISTED';
+        }
 
         const log = new NotificationLog({
           recipientEmail: app.studentId.email,
           studentId: app.studentId._id,
           subject,
           content,
-          type: status === 'REJECTED' ? 'APPLICATION_REJECTED' : 'APPLICATION_HIRED',
+          type: logType,
           status: "PENDING",
           attempts: 1
         });

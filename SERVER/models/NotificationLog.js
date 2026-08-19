@@ -21,7 +21,7 @@ const notificationLogSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["WELCOME", "HR_ACTIVATION", "INTERVIEW_SCHEDULED", "REASSIGNED", "INTERVIEW_CANCELLED", "GENERAL"],
+      enum: ["WELCOME", "HR_ACTIVATION", "INTERVIEW_SCHEDULED", "REASSIGNED", "INTERVIEW_CANCELLED", "GENERAL", "APPLICATION_REJECTED", "APPLICATION_HIRED", "APPLICATION_SHORTLISTED"],
       required: true,
     },
     status: {

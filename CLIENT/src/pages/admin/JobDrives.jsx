@@ -9,6 +9,12 @@ const JobDrives = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('ALL'); // ALL, ACTIVE, DRAFT, CLOSED
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectDriveId, setRejectDriveId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  
+  const [viewDrive, setViewDrive] = useState(null);
+  
   const navigate = useNavigate();
 
   const getAuthHeader = () => ({
@@ -30,25 +36,39 @@ const JobDrives = () => {
     fetchDrives();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this job drive? This action cannot be undone.")) return;
-    try {
-      await api.delete(`/admin/job-drives/${id}`, getAuthHeader());
-      toast.success("Job drive deleted successfully");
-      fetchDrives();
-    } catch (error) {
-      toast.error("Failed to delete job drive");
-    }
-  };
 
   const handleStatusUpdate = async (id, newStatus) => {
     if (newStatus === 'CANCELLED' && !window.confirm("Are you sure you want to cancel this drive? This will notify scheduled students.")) return;
+    if (newStatus === 'REJECTED') {
+      setRejectDriveId(id);
+      setRejectionReason('');
+      setIsRejectModalOpen(true);
+      return;
+    }
+    
     try {
       await api.put(`/admin/job-drives/${id}`, { status: newStatus }, getAuthHeader());
       toast.success(`Job drive marked as ${newStatus}`);
       fetchDrives();
     } catch (error) {
       toast.error("Failed to update status");
+    }
+  };
+
+  const submitRejection = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Rejection reason is required");
+      return;
+    }
+    try {
+      await api.put(`/admin/job-drives/${rejectDriveId}`, { status: 'REJECTED', rejectionReason }, getAuthHeader());
+      toast.success("Job drive marked as REJECTED");
+      setIsRejectModalOpen(false);
+      setRejectDriveId(null);
+      setRejectionReason('');
+      fetchDrives();
+    } catch (error) {
+      toast.error("Failed to reject job drive");
     }
   };
 
@@ -91,7 +111,7 @@ const JobDrives = () => {
         {/* Toolbar */}
         <div className="p-6 border-b border-[var(--color-bg-input)] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
           <div className="flex space-x-2">
-            {['ALL', 'ACTIVE', 'PENDING_APPROVAL', 'DRAFT', 'COMPLETED', 'CANCELLED'].map((tab) => (
+            {['ALL', 'ACTIVE', 'PENDING_APPROVAL', 'REJECTED', 'DRAFT', 'COMPLETED', 'CANCELLED'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -143,9 +163,17 @@ const JobDrives = () => {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-white group-hover:text-[#00ED64] transition-colors">{drive.title}</h3>
-                      <div className="flex items-center text-[var(--color-text-secondary)] text-sm mt-1">
-                        <Building2 size={14} className="mr-1" />
-                        {drive.companyId?.name || drive.companyName || 'Company'}
+                      <div className="flex flex-col mt-2 gap-1">
+                        <div className="flex items-center text-[var(--color-text-secondary)] text-sm">
+                          <Building2 size={14} className="mr-2" />
+                          {drive.companyId?.name || drive.companyName || 'Company'}
+                        </div>
+                        {drive.postedByHR?.email && (
+                          <div className="flex items-center text-[var(--color-text-secondary)] text-sm">
+                            <Users size={14} className="mr-2" />
+                            {drive.postedByHR.email}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -201,26 +229,29 @@ const JobDrives = () => {
                       )}
 
                       <button
+                        onClick={() => setViewDrive(drive)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
                         onClick={() => navigate(`/admin/job-drives/${drive._id}/applications`)}
-                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded transition-colors"
-                        title="View Applications"
+                        disabled={['PENDING_APPROVAL', 'REJECTED'].includes(drive.status)}
+                        className={`p-2 rounded transition-colors ${['PENDING_APPROVAL', 'REJECTED'].includes(drive.status) ? 'text-gray-600 cursor-not-allowed opacity-50' : 'text-gray-400 hover:text-blue-500 hover:bg-blue-500/10'}`}
+                        title={['PENDING_APPROVAL', 'REJECTED'].includes(drive.status) ? "No applications available" : "View Applications"}
                       >
                         <Users size={16} />
                       </button>
                       <button
                         onClick={() => navigate(`/admin/job-drives/edit/${drive._id}`)}
-                        className="p-2 text-gray-400 hover:text-[#00ED64] hover:bg-[#00ED64]/10 rounded transition-colors"
-                        title="Edit Drive"
+                        disabled={['REJECTED', 'CANCELLED', 'COMPLETED'].includes(drive.status)}
+                        className={`p-2 rounded transition-colors ${['REJECTED', 'CANCELLED', 'COMPLETED'].includes(drive.status) ? 'text-gray-600 cursor-not-allowed opacity-50' : 'text-gray-400 hover:text-[#00ED64] hover:bg-[#00ED64]/10'}`}
+                        title={['REJECTED', 'CANCELLED', 'COMPLETED'].includes(drive.status) ? "Cannot edit drive in this state" : "Edit Drive"}
                       >
                         <Edit2 size={16} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(drive._id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                        title="Delete Drive"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+
                     </div>
                   </div>
                 </div>
@@ -229,6 +260,168 @@ const JobDrives = () => {
           )}
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      {isRejectModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-[#112240] border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up">
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <Trash2 className="text-red-500 mr-2" size={20} />
+                Reject Job Drive
+              </h3>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-sm text-gray-400 mb-4">
+                Please provide a reason for rejecting this job drive. This feedback will be emailed to the HR so they can make corrections and resubmit.
+              </p>
+              
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="e.g. Please increase the salary package and fix the typos in the description..."
+                className="w-full bg-[#0A192F] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 resize-none h-32"
+                required
+              />
+            </div>
+            
+            <div className="p-6 border-t border-gray-800 bg-[#0A192F]/50 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setIsRejectModalOpen(false);
+                  setRejectDriveId(null);
+                }}
+                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitRejection}
+                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-lg shadow-red-500/20 transition-all"
+              >
+                Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* View Details Modal */}
+      {viewDrive && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-[#112240] border border-gray-700 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-slide-up">
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#0A192F]">
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-1">{viewDrive.title}</h3>
+                <div className="flex items-center text-sm text-[var(--color-text-secondary)]">
+                  <Building2 size={14} className="mr-1" />
+                  <span className="mr-4">{viewDrive.companyId?.name || viewDrive.companyName}</span>
+                  {viewDrive.postedByHR?.email && (
+                    <>
+                      <Users size={14} className="mr-1" />
+                      <span>{viewDrive.postedByHR.email}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 space-y-8">
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800">
+                  <p className="text-xs text-gray-400 mb-1">Role</p>
+                  <p className="font-semibold text-white">{viewDrive.jobRole}</p>
+                </div>
+                <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800">
+                  <p className="text-xs text-gray-400 mb-1">Package</p>
+                  <p className="font-semibold text-[#00ED64]">₹{viewDrive.packageLPA} LPA</p>
+                </div>
+                <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800">
+                  <p className="text-xs text-gray-400 mb-1">Location</p>
+                  <p className="font-semibold text-white">{viewDrive.location}</p>
+                </div>
+                <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800">
+                  <p className="text-xs text-gray-400 mb-1">Deadline</p>
+                  <p className="font-semibold text-red-400">{new Date(viewDrive.deadline).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-bold text-white mb-3 flex items-center border-b border-gray-800 pb-2">
+                  <Briefcase className="mr-2 text-[#00ED64]" size={18} />
+                  Description
+                </h4>
+                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap bg-[#0A192F] p-4 rounded-xl border border-gray-800">
+                  {viewDrive.description}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-bold text-white mb-3 flex items-center border-b border-gray-800 pb-2">
+                  <Users className="mr-2 text-blue-400" size={18} />
+                  Eligibility Criteria
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-[#0A192F] p-3 rounded-lg border border-gray-800 flex justify-between">
+                    <span className="text-gray-400 text-sm">Min CGPA</span>
+                    <span className="text-white font-bold">{viewDrive.minCgpa}</span>
+                  </div>
+                  <div className="bg-[#0A192F] p-3 rounded-lg border border-gray-800 flex justify-between">
+                    <span className="text-gray-400 text-sm">Max Backlogs</span>
+                    <span className="text-white font-bold">{viewDrive.maxBacklogs}</span>
+                  </div>
+                  <div className="bg-[#0A192F] p-3 rounded-lg border border-gray-800 flex justify-between">
+                    <span className="text-gray-400 text-sm">Passout Year</span>
+                    <span className="text-white font-bold">{viewDrive.passoutYear}</span>
+                  </div>
+                </div>
+                {viewDrive.eligibleBranches && viewDrive.eligibleBranches.length > 0 && (
+                  <div className="mt-3 bg-[#0A192F] p-3 rounded-lg border border-gray-800">
+                    <span className="text-gray-400 text-sm block mb-2">Eligible Branches</span>
+                    <div className="flex flex-wrap gap-2">
+                      {viewDrive.eligibleBranches.map(b => (
+                        <span key={b} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs font-medium">{b}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {viewDrive.rounds && viewDrive.rounds.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-bold text-white mb-3 flex items-center border-b border-gray-800 pb-2">
+                    <Calendar className="mr-2 text-purple-400" size={18} />
+                    Selection Rounds
+                  </h4>
+                  <div className="space-y-3">
+                    {viewDrive.rounds.map((round, idx) => (
+                      <div key={idx} className="bg-[#0A192F] p-4 rounded-xl border border-gray-800 flex flex-col md:flex-row md:items-center">
+                        <div className="bg-purple-500/20 text-purple-400 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 mb-2 md:mb-0 shrink-0">
+                          {idx + 1}
+                        </div>
+                        <div>
+                          <p className="font-bold text-white">{round.name}</p>
+                          {round.description && <p className="text-sm text-gray-400 mt-1">{round.description}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-800 flex items-center justify-end bg-[#0A192F] rounded-b-2xl">
+              <button
+                onClick={() => setViewDrive(null)}
+                className="px-6 py-2.5 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

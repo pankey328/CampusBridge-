@@ -130,45 +130,79 @@ const JobDrives = () => {
 
             <div className="p-6 overflow-y-auto flex-1 space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-text-secondary)] mb-1">Package</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{selectedDrive.packageLPA} LPA</p>
+                <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-1">Role</p>
+                  <p className="font-semibold text-[var(--color-text-primary)]">{selectedDrive.jobRole}</p>
                 </div>
-                <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)]">
+                <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-1">Package</p>
+                  <p className="font-semibold text-[var(--color-brand-primary)]">₹{selectedDrive.packageLPA} LPA</p>
+                </div>
+                <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)]">
                   <p className="text-xs text-[var(--color-text-secondary)] mb-1">Location</p>
                   <p className="font-semibold text-[var(--color-text-primary)]">{selectedDrive.location}</p>
                 </div>
-                <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-text-secondary)] mb-1">Passout Year</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{selectedDrive.passoutYear}</p>
-                </div>
-                <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-text-secondary)] mb-1">Min CGPA</p>
-                  <p className="font-semibold text-[var(--color-text-primary)]">{selectedDrive.minCgpa}</p>
+                <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-text-secondary)] mb-1">Deadline</p>
+                  <p className="font-semibold text-red-400">{new Date(selectedDrive.deadline).toLocaleDateString()}</p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2 flex items-center">
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center border-b border-[var(--color-border)] pb-2">
                   <BookOpen size={18} className="mr-2 text-[var(--color-brand-primary)]" />
-                  Job Description
+                  Description
                 </h3>
-                <p className="text-[var(--color-text-secondary)] whitespace-pre-wrap leading-relaxed">
+                <div className="text-[var(--color-text-secondary)] text-sm leading-relaxed whitespace-pre-wrap bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)]">
                   {selectedDrive.description}
-                </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center border-b border-[var(--color-border)] pb-2">
+                  <AlertCircle className="mr-2 text-blue-400" size={18} />
+                  Eligibility Criteria
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] flex justify-between">
+                    <span className="text-[var(--color-text-secondary)] text-sm">Min CGPA</span>
+                    <span className="text-[var(--color-text-primary)] font-bold">{selectedDrive.minCgpa}</span>
+                  </div>
+                  <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] flex justify-between">
+                    <span className="text-[var(--color-text-secondary)] text-sm">Max Backlogs</span>
+                    <span className="text-[var(--color-text-primary)] font-bold">{selectedDrive.maxBacklogs}</span>
+                  </div>
+                  <div className="bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)] flex justify-between">
+                    <span className="text-[var(--color-text-secondary)] text-sm">Passout Year</span>
+                    <span className="text-[var(--color-text-primary)] font-bold">{selectedDrive.passoutYear}</span>
+                  </div>
+                </div>
+                {selectedDrive.eligibleBranches && selectedDrive.eligibleBranches.length > 0 && (
+                  <div className="mt-3 bg-[var(--color-bg-primary)] p-3 rounded-lg border border-[var(--color-border)]">
+                    <span className="text-[var(--color-text-secondary)] text-sm block mb-2">Eligible Branches</span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedDrive.eligibleBranches.map(b => (
+                        <span key={b} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs font-medium">{b}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedDrive.rounds && selectedDrive.rounds.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Hiring Rounds</h3>
+                  <h4 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center border-b border-[var(--color-border)] pb-2">
+                    <Calendar className="mr-2 text-purple-400" size={18} />
+                    Selection Rounds
+                  </h4>
                   <div className="space-y-3">
-                    {selectedDrive.rounds.map((round) => (
-                      <div key={round._id} className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] p-4 rounded-lg flex items-start">
-                        <div className="bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 shrink-0">
-                          {round.order}
+                    {selectedDrive.rounds.map((round, idx) => (
+                      <div key={round._id || idx} className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)] flex flex-col md:flex-row md:items-center">
+                        <div className="bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)] w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 mb-2 md:mb-0 shrink-0">
+                          {round.order || idx + 1}
                         </div>
                         <div>
-                          <p className="font-medium text-[var(--color-text-primary)]">{round.name}</p>
+                          <p className="font-bold text-[var(--color-text-primary)]">{round.name}</p>
                           {round.description && <p className="text-sm text-[var(--color-text-secondary)] mt-1">{round.description}</p>}
                         </div>
                       </div>

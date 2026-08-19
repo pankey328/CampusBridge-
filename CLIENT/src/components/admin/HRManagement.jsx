@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, CheckCircle, XCircle, Trash2, Save, X, Building2, User, Mail, Phone, Briefcase, Link as LinkIcon, FileText, Edit2, RefreshCw, Eye } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const HRManagement = () => {
   const [hrs, setHrs] = useState([]);
@@ -69,7 +70,7 @@ const HRManagement = () => {
 
       fetchHRs();
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to add HR");
+      toast.error(error.response?.data?.message || "Failed to add HR");
     }
   };
 
@@ -77,9 +78,10 @@ const HRManagement = () => {
     if (window.confirm("Approve this HR registration?")) {
       try {
         await api.put(`/admin/approve-hr/${id}`, {}, getAuthHeader());
+        toast.success("HR approved successfully");
         fetchHRs();
       } catch (error) {
-        alert("Failed to approve HR");
+        toast.error("Failed to approve HR");
       }
     }
   };
@@ -93,7 +95,7 @@ const HRManagement = () => {
 
       fetchHRs();
     } catch (error) {
-      alert("Failed to reject HR");
+      toast.error("Failed to reject HR");
     }
   };
 
@@ -103,8 +105,9 @@ const HRManagement = () => {
       await api.put(`/admin/hr/${selectedHr.id}`, formData, getAuthHeader());
       setShowEditModal(false);
       fetchHRs();
+      toast.success("HR updated successfully");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to update HR");
+      toast.error(error.response?.data?.message || "Failed to update HR");
     }
   };
 
@@ -129,7 +132,7 @@ const HRManagement = () => {
       setViewData(data.data);
       setShowViewModal(true);
     } catch (error) {
-      alert("Failed to fetch HR details");
+      toast.error("Failed to fetch HR details");
     }
   };
 
@@ -137,9 +140,10 @@ const HRManagement = () => {
     if (window.confirm("Are you sure you want to deactivate this HR? They won't be able to log in.")) {
       try {
         await api.put(`/admin/hr/${id}/soft`, {}, getAuthHeader());
+        toast.success("HR deactivated successfully");
         fetchHRs();
       } catch (error) {
-        alert("Failed to deactivate HR");
+        toast.error("Failed to deactivate HR");
       }
     }
   };
@@ -148,9 +152,10 @@ const HRManagement = () => {
     if (window.confirm("WARNING: This will permanently delete the HR and their profile. Proceed?")) {
       try {
         await api.delete(`/admin/hr/${id}/hard`, getAuthHeader());
+        toast.success("HR deleted permanently");
         fetchHRs();
       } catch (error) {
-        alert("Failed to delete HR permanently");
+        toast.error("Failed to delete HR permanently");
       }
     }
   };
@@ -158,9 +163,10 @@ const HRManagement = () => {
   const handleRestore = async (id) => {
     try {
       await api.put(`/admin/hr/${id}/restore`, {}, getAuthHeader());
+      toast.success("HR restored successfully");
       fetchHRs();
     } catch (error) {
-      alert("Failed to restore HR");
+      toast.error("Failed to restore HR");
     }
   };
 
@@ -280,9 +286,9 @@ const HRManagement = () => {
                             onClick={async () => {
                               try {
                                 await api.post(`/admin/hr/${hr.id}/resend-activation`, {}, getAuthHeader());
-                                alert('New setup link generated and sent via email!');
+                                toast.success('New setup link generated and sent via email!');
                               } catch (err) {
-                                alert('Failed to resend setup link.');
+                                toast.error('Failed to resend setup link.');
                               }
                             }} 
                             title="Resend Setup Link" 
@@ -464,7 +470,7 @@ const HRManagement = () => {
                         value={formData.website}
                         onChange={handleInputChange}
                         className="block w-full pl-10 pr-3 py-2 text-sm border border-[var(--color-bg-input)] rounded-lg bg-[var(--color-bg-input)] text-white focus:ring-1 focus:ring-[#00ED64] focus:outline-none"
-                        placeholder="https://acme.com"
+                        placeholder="https://abc.com"
                       />
                     </div>
                   </div>

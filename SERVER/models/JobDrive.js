@@ -78,8 +78,12 @@ const jobDriveSchema = new mongoose.Schema(
     
     status: {
       type: String,
-      enum: ["DRAFT", "PENDING_APPROVAL", "ACTIVE", "COMPLETED", "CANCELLED"],
+      enum: ["DRAFT", "PENDING_APPROVAL", "ACTIVE", "COMPLETED", "CANCELLED", "REJECTED"],
       default: "PENDING_APPROVAL", 
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
     },
     rounds: {
       type: [roundSchema],
