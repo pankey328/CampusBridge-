@@ -29,7 +29,13 @@ exports.getAvailableDrives = async (req, res) => {
       let isEligible = true;
       let ineligibilityReason = "";
 
-      if (profile.cgpa < drive.minCgpa) {
+      if (profile.isLocked) {
+        isEligible = false;
+        ineligibilityReason = "Profile locked (One-Offer Policy). Contact TPO to unlock.";
+      } else if (!profile.resumeUrl) {
+        isEligible = false;
+        ineligibilityReason = "Resume missing. Please upload your resume in Profile settings to apply.";
+      } else if (profile.cgpa < drive.minCgpa) {
         isEligible = false;
         ineligibilityReason = `CGPA requirement not met (Required: ${drive.minCgpa}, Yours: ${profile.cgpa})`;
       } else if (profile.activeBacklogs > drive.maxBacklogs) {
@@ -83,6 +89,10 @@ exports.applyToDrive = async (req, res) => {
     const profile = await StudentProfile.findOne({ userId: studentId });
     if (!profile) return res.status(404).json({ message: "Student profile not found" });
 
+    if (profile.isLocked) {
+      return res.status(403).json({ message: "Your profile is locked (One-Offer Policy). You cannot apply to new drives unless unlocked by TPO." });
+    }
+
     if (profile.cgpa < drive.minCgpa) return res.status(400).json({ message: "CGPA requirement not met" });
     if (profile.activeBacklogs > drive.maxBacklogs) return res.status(400).json({ message: "Active backlogs limit exceeded" });
     if (profile.passoutYear !== drive.passoutYear) return res.status(400).json({ message: "Passout year mismatch" });
@@ -94,9 +104,8 @@ exports.applyToDrive = async (req, res) => {
       if (!isBranchEligible) return res.status(400).json({ message: "Branch not eligible" });
     }
 
-    // Check if resume is uploaded
     if (!profile.resumeUrl) {
-    
+      return res.status(400).json({ message: "Please upload your resume in Profile settings before applying to job drives." });
     }
 
     const existingApplication = await Application.findOne({ studentId, jobDriveId });
@@ -170,7 +179,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Update My Profile (Only editable fields)
+// Update My Profile
 exports.updateProfile = async (req, res) => {
   try {
     const studentId = req.user.id;

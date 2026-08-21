@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, CheckCircle, XCircle, Trash2, Save, X, Building2, User, Mail, Phone, Briefcase, Link as LinkIcon, FileText, Edit2, RefreshCw, Eye } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import useDebounce from '../../hooks/useDebounce';
 
 const HRManagement = () => {
   const [hrs, setHrs] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('PENDING'); // PENDING or ACTIVE
+  const [activeTab, setActiveTab] = useState('ACTIVE');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortOption, setSortOption] = useState('newest');
+  const debouncedSearch = useDebounce(searchTerm, 1000);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -36,13 +43,14 @@ const HRManagement = () => {
   const fetchHRs = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/admin/hr?status=${activeTab}`, getAuthHeader());
-      // Searching
-      const hrList = data.data || [];
-      if (searchTerm) {
-        setHrs(hrList.filter(hr => hr.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || hr.email.toLowerCase().includes(searchTerm.toLowerCase())));
-      } else {
-        setHrs(hrList);
+      let queryString = `?page=${page}&limit=${limit}&sort=${sortOption}&status=${activeTab}`;
+      if (debouncedSearch) {
+        queryString += `&search=${debouncedSearch}`;
+      }
+      const { data } = await api.get(`/admin/hr${queryString}`, getAuthHeader());
+      setHrs(data.data || []);
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages);
       }
     } catch (error) {
       console.error("Failed to fetch HRs", error);
@@ -51,11 +59,8 @@ const HRManagement = () => {
   };
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      fetchHRs();
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [activeTab, searchTerm]);
+    fetchHRs();
+  }, [page, limit, activeTab, debouncedSearch, sortOption]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -171,34 +176,66 @@ const HRManagement = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn w-full pb-8">
+      {/* Header */}
+      <div className="flex justify-between items-center shrink-0">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">HR Management</h1>
+          <p className="text-gray-400">Manage corporate partners, approve HR requests, and oversee company profiles.</p>
+        </div>
+        <button
+          onClick={() => {
+            setFormData({ companyName: '', email: '', designation: '', phone: '', linkedinUrl: '', industry: '', website: '', gstin: '' });
+            setShowAddModal(true);
+          }}
+          className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap"
+        >
+          <Plus size={20} />
+          <span>Manually Add HR</span>
+        </button>
+      </div>
+
       {/* Controls Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
 
         {/* Tabs */}
-        <div className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800">
+        <div className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800 flex-wrap sm:flex-nowrap">
           <button
-            onClick={() => setActiveTab('PENDING')}
-            className={`px-6 py-2 rounded-md transition-all ${activeTab === 'PENDING' ? 'bg-[#00ED64] text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => { setActiveTab('PENDING'); setPage(1); }}
+            className={`px-4 sm:px-6 py-2 rounded-md transition-all ${activeTab === 'PENDING' ? 'bg-[#00ED64] text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
           >
             Pending Approvals
           </button>
           <button
-            onClick={() => setActiveTab('ACTIVE')}
-            className={`px-6 py-2 rounded-md transition-all ${activeTab === 'ACTIVE' ? 'bg-[#00ED64] text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => { setActiveTab('ACTIVE'); setPage(1); }}
+            className={`px-4 sm:px-6 py-2 rounded-md transition-all ${activeTab === 'ACTIVE' ? 'bg-[#00ED64] text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
           >
             Active Companies
           </button>
           <button
-            onClick={() => setActiveTab('INACTIVE')}
-            className={`px-6 py-2 rounded-md transition-all ${activeTab === 'INACTIVE' ? 'bg-red-500 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => { setActiveTab('INACTIVE'); setPage(1); }}
+            className={`px-4 sm:px-6 py-2 rounded-md transition-all ${activeTab === 'INACTIVE' ? 'bg-red-500 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
           >
             Inactive / Deleted
           </button>
         </div>
 
         {/* Search & Add */}
-        <div className="flex w-full md:w-auto space-x-3">
+        <div className="flex flex-col md:flex-row w-full md:w-auto space-y-3 md:space-y-0 md:space-x-3">
+          <select
+            value={sortOption}
+            onChange={(e) => {
+              setSortOption(e.target.value);
+              setPage(1);
+            }}
+            className="bg-[#0A192F] border border-gray-700 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:border-[#00ED64]"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="company_az">Company (A-Z)</option>
+            <option value="company_za">Company (Z-A)</option>
+          </select>
+
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
@@ -209,21 +246,16 @@ const HRManagement = () => {
               className="w-full bg-[#0A192F] border border-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-[#00ED64] focus:ring-1 focus:ring-[#00ED64]"
             />
           </div>
-          <button
-            onClick={() => {
-              setFormData({ companyName: '', email: '', designation: '', phone: '', linkedinUrl: '', industry: '', website: '', gstin: '' });
-              setShowAddModal(true);
-            }}
-            className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-4 rounded-lg transition-colors whitespace-nowrap"
-          >
-            <Plus size={18} />
-            <span>Manually Add HR</span>
-          </button>
         </div>
       </div>
 
       {/* Data Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-800">
+      <div className="relative rounded-lg border border-gray-800 overflow-x-auto w-full bg-[#0A192F]/50">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
+          </div>
+        )}
         <table className="w-full text-left text-sm text-gray-300">
           <thead className="text-xs uppercase bg-[#0A192F] text-gray-400">
             <tr>
@@ -235,18 +267,25 @@ const HRManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="5" className="px-6 py-8 text-center text-gray-500">Loading HRs...</td>
-              </tr>
-            ) : hrs.length === 0 ? (
+            {hrs.length === 0 && !loading ? (
               <tr>
                 <td colSpan="5" className="px-6 py-8 text-center text-gray-500">No HRs found.</td>
               </tr>
             ) : (
               hrs.map((hr) => (
                 <tr key={hr.id} className="border-b border-gray-800 hover:bg-[#0A192F]/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-white">{hr.companyName}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      {hr.logoUrl ? (
+                        <img src={hr.logoUrl} alt="Logo" className="w-8 h-8 object-contain rounded bg-white p-0.5 shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded bg-[#0A192F] flex items-center justify-center text-gray-400 shrink-0 border border-gray-700">
+                          <Building2 size={16} />
+                        </div>
+                      )}
+                      <span className="font-bold text-white">{hr.companyName}</span>
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <div>{hr.designation}</div>
                   </td>
@@ -321,6 +360,56 @@ const HRManagement = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Footer */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#0A192F] p-4 rounded-lg border border-gray-800 w-full">
+        <div className="flex items-center text-sm text-gray-400">
+          <span>Show</span>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            className="mx-2 bg-[#112240] border border-gray-700 rounded px-2 py-1 text-white focus:outline-none focus:border-[#00ED64]"
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span>entries</span>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                page === 1
+                  ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                  : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                page === totalPages || totalPages === 0
+                  ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                  : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Add/Edit HR Modal */}

@@ -94,7 +94,6 @@ exports.createTPO = async (req, res) => {
     });
     await newProfile.save({ session });
 
-    // notification for setup email
     const setupLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${savedUser._id}`;
 
     await NotificationLog.create([{
@@ -117,28 +116,85 @@ exports.createTPO = async (req, res) => {
   }
 };
 
-// Get All TPOs
+// Get All TPOs 
 exports.getAllTPOs = async (req, res) => {
   try {
-    const users = await User.find({ role: "TPO" }).select("email status isApproved");
+    const { status = "ALL", search = "", sort = "newest", page = 1, limit = 10 } = req.query;
+
+    const query = { role: "TPO" };
+    if (status && status !== "ALL") {
+      query.status = status;
+    }
+
+    const users = await User.find(query).select("email status isApproved createdAt");
     const userIds = users.map(u => u._id);
 
     const profiles = await TPOProfile.find({ userId: { $in: userIds } }).populate("createdBy", "email");
 
-    const tpos = profiles.map(profile => {
-      const user = users.find(u => u._id.toString() === profile.userId.toString());
+    let tpos = users.map(user => {
+      const profile = profiles.find(p => p.userId.toString() === user._id.toString());
       return {
         id: user._id,
         email: user.email,
         status: user.status,
-        name: profile.name,
-        phone: profile.phone,
-        createdBy: profile.createdBy ? profile.createdBy.email : "Unknown",
-        createdAt: profile.createdAt
+        name: profile?.name || "",
+        phone: profile?.phone || "",
+        createdBy: profile?.createdBy ? profile.createdBy.email : "Unknown",
+        createdAt: user.createdAt || profile?.createdAt,
       };
     });
 
-    res.status(200).json({ message: "TPOs fetched successfully", data: tpos });
+    // Search 
+    if (search) {
+      const s = search.toLowerCase().trim();
+      tpos = tpos.filter(t =>
+        (t.name && t.name.toLowerCase().includes(s)) ||
+        (t.email && t.email.toLowerCase().includes(s)) ||
+        (t.phone && t.phone.toLowerCase().includes(s)) ||
+        (t.createdBy && t.createdBy.toLowerCase().includes(s))
+      );
+    }
+
+    // Sorting
+    tpos.sort((a, b) => {
+      switch (sort) {
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'name_az':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'name_za':
+          return (b.name || '').localeCompare(a.name || '');
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+
+    const allTpoUsers = await User.find({ role: "TPO" }).select("status");
+    const stats = {
+      total: allTpoUsers.length,
+      active: allTpoUsers.filter(u => u.status === "ACTIVE").length,
+      pending: allTpoUsers.filter(u => u.status === "PENDING").length,
+      inactive: allTpoUsers.filter(u => u.status === "INACTIVE").length,
+    };
+
+    // Pagination
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const startIndex = (pageNum - 1) * limitNum;
+    const paginatedTpos = tpos.slice(startIndex, startIndex + limitNum);
+
+    res.status(200).json({
+      message: "TPOs fetched successfully",
+      data: paginatedTpos,
+      stats,
+      pagination: {
+        totalDocuments: tpos.length,
+        totalPages: Math.ceil(tpos.length / limitNum) || 1,
+        currentPage: pageNum,
+        limit: limitNum
+      }
+    });
   } catch (error) {
     console.error("Get All TPOs Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });

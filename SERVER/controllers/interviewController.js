@@ -52,22 +52,37 @@ exports.bulkScheduleInterviews = async (req, res) => {
       for (const studentId of studentIds) {
         const endTime = new Date(currentStartTime.getTime() + durationMinutes * 60000);
 
-        const newSlot = new InterviewSlot({
-          jobDriveId: id,
-          studentId: studentId,
-          panelistId: req.user.id,
-          mode,
-          venueBuilding,
-          venueRoom,
-          meetingLink,
-          slotDate: new Date(slotDate),
-          startTime: currentStartTime,
-          endTime: endTime,
-          status: "SCHEDULED",
-        });
+        let currentSlot = await InterviewSlot.findOne({ jobDriveId: id, studentId: studentId }).session(session);
 
-        await newSlot.save({ session });
-        createdSlots.push(newSlot);
+        if (currentSlot) {
+          currentSlot.panelistId = req.user.id;
+          currentSlot.mode = mode;
+          currentSlot.venueBuilding = venueBuilding;
+          currentSlot.venueRoom = venueRoom;
+          currentSlot.meetingLink = meetingLink;
+          currentSlot.slotDate = new Date(slotDate);
+          currentSlot.startTime = currentStartTime;
+          currentSlot.endTime = endTime;
+          currentSlot.status = "RESCHEDULED";
+          await currentSlot.save({ session });
+          createdSlots.push(currentSlot);
+        } else {
+          currentSlot = new InterviewSlot({
+            jobDriveId: id,
+            studentId: studentId,
+            panelistId: req.user.id,
+            mode,
+            venueBuilding,
+            venueRoom,
+            meetingLink,
+            slotDate: new Date(slotDate),
+            startTime: currentStartTime,
+            endTime: endTime,
+            status: "SCHEDULED",
+          });
+          await currentSlot.save({ session });
+          createdSlots.push(currentSlot);
+        }
 
         // Update Application Status
         await Application.findOneAndUpdate(
@@ -88,7 +103,7 @@ exports.bulkScheduleInterviews = async (req, res) => {
             : `<b>Venue:</b> ${venueBuilding}, Room ${venueRoom}`;
             
           const formattedDate = new Date(slotDate).toLocaleDateString();
-          const formattedTime = newSlot.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const formattedTime = currentSlot.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
           const content = `
             <p>Congratulations!</p>

@@ -32,10 +32,10 @@ const Login = () => {
 
       toast.success("Welcome back to CampusBridge!");
 
-      // RBAC
       const role = resultAction.user.role;
       localStorage.setItem("role", role);
-      if (role === "SUPERADMIN" || role === "TPO") navigate("/admin/dashboard");
+      if (role === "SUPERADMIN") navigate("/superadmin/dashboard");
+      else if (role === "TPO") navigate("/admin/dashboard");
       else if (role === "HR") navigate("/hr/dashboard");
       else navigate("/student/dashboard");
     } catch (error) {
@@ -111,15 +111,7 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-[var(--color-text-secondary)]">
-          Corporate Recruiter?{" "}
-          <a
-            href="/register-hr"
-            className="font-bold text-[var(--color-brand-primary)] hover:underline"
-          >
-            Apply for an account
-          </a>
-        </div>
+
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/authSlice';
-import { LayoutDashboard, Users, Briefcase, LogOut, Settings, ClipboardList, Shield, Sun, Moon, Mail } from 'lucide-react';
+import { LayoutDashboard, Users, Briefcase, LogOut, Settings, ClipboardList, Shield, Sun, Moon, Mail, UserPlus } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 
 const AdminLayout = () => {
@@ -17,29 +17,30 @@ const AdminLayout = () => {
     navigate('/login');
   };
 
+  const role = localStorage.getItem('role');
+  const basePath = role === 'SUPERADMIN' ? '/superadmin' : '/admin';
+
   const navItems = [
-    { path: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Overview' },
-    { path: '/admin/students', icon: <Users size={20} />, label: 'Student Management' },
-    { path: '/admin/students/bulk-import', icon: <Users size={20} />, label: 'Bulk Import Students' },
-    { path: '/admin/hr', icon: <Briefcase size={20} />, label: 'HR Management' },
-    { path: '/admin/job-drives', icon: <ClipboardList size={20} />, label: 'Job Drives' },
+    { path: `${basePath}/dashboard`, icon: <LayoutDashboard size={20} />, label: 'Overview', end: true },
+    { path: `${basePath}/students`, icon: <Users size={20} />, label: 'Student Management', end: true },
+    { path: `${basePath}/students/bulk-import`, icon: <UserPlus size={20} />, label: 'Bulk Import Students', end: true },
+    { path: `${basePath}/hr`, icon: <Briefcase size={20} />, label: 'HR Management', end: true },
+    { path: `${basePath}/job-drives`, icon: <ClipboardList size={20} />, label: 'Job Drives', end: false },
   ];
 
-  const role = localStorage.getItem('role');
-
   if (role === 'SUPERADMIN') {
-    navItems.push({ path: '/admin/tpos', icon: <Shield size={20} />, label: 'TPO Management' });
+    navItems.push({ path: `${basePath}/tpos`, icon: <Shield size={20} />, label: 'TPO Management', end: true });
   }
 
-  navItems.push({ path: '/admin/notifications', icon: <Mail size={20} />, label: 'Email Logs' });
-  navItems.push({ path: '/admin/settings', icon: <Settings size={20} />, label: 'Settings' });
+  navItems.push({ path: `${basePath}/notifications`, icon: <Mail size={20} />, label: 'Email Logs', end: true });
+  navItems.push({ path: `${basePath}/settings`, icon: <Settings size={20} />, label: 'Settings', end: true });
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex overflow-hidden font-sans transition-colors duration-300">
 
       {/* Sidebar */}
       <aside className="w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex flex-col transition-all duration-300 z-20">
-        {/* Logo Area */}
+        {/* Logo */}
         <div className="h-20 flex items-center justify-center border-b border-[var(--color-border)]">
           <h2 className="text-2xl font-bold text-[var(--color-brand-primary)] tracking-wider">
             Campus<span className="text-[var(--color-text-primary)]">Bridge</span>
@@ -52,6 +53,7 @@ const AdminLayout = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              end={item.end}
               className={({ isActive }) => `
                 flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
                 ${isActive
@@ -90,12 +92,14 @@ const AdminLayout = () => {
         {/* Header */}
         <header className="h-20 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex items-center justify-between px-8 z-10 transition-colors duration-300">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Admin Portal</h1>
-            <p className="text-sm text-[var(--color-text-secondary)] mt-1">Manage system, users and drives</p>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {role === 'SUPERADMIN' ? 'SuperAdmin Portal' : 'Training & Placement Officer (TPO) Portal'}
+            </h1>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1">Manage system, placement drives and accounts</p>
           </div>
         </header>
 
-        {/* Dynamic Page Content */}
+        {/* Dynamic Content */}
         <div className="flex-1 overflow-y-auto p-8 relative">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#00ED64] rounded-full mix-blend-screen filter blur-[150px] opacity-5 pointer-events-none"></div>
 

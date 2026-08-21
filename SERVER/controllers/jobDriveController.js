@@ -52,6 +52,7 @@ exports.createJobDrive = async (req, res) => {
       title,
       jobRole,
       description,
+      jdFileUrl: req.body.jdFileUrl || "",
       eligibleBranches,
       minCgpa,
       maxBacklogs,
@@ -77,19 +78,74 @@ exports.createJobDrive = async (req, res) => {
 // Get All Job Drives
 exports.getAllJobDrives = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const status = req.query.status || 'ALL';
+    const search = req.query.search || '';
+    const sort = req.query.sort || 'newest';
+
+    let sortObj = { createdAt: -1 };
+    if (sort === 'oldest') {
+      sortObj = { createdAt: 1 };
+    } else if (sort === 'deadline_soon') {
+      sortObj = { deadline: 1 };
+    } else if (sort === 'deadline_late') {
+      sortObj = { deadline: -1 };
+    } else if (sort === 'salary_high') {
+      sortObj = { packageLPA: -1 };
+    } else if (sort === 'salary_low') {
+      sortObj = { packageLPA: 1 };
+    } else if (sort === 'title_az') {
+      sortObj = { title: 1 };
+    } else if (sort === 'title_za') {
+      sortObj = { title: -1 };
+    }
+
     const query = {
-      $or: [
-        { status: { $ne: 'DRAFT' } },
-        { status: 'DRAFT', createdBy: req.user.id }
+      $and: [
+        {
+          $or: [
+            { status: { $ne: 'DRAFT' } },
+            { status: 'DRAFT', createdBy: req.user.id }
+          ]
+        }
       ]
     };
 
-    const jobDrives = await JobDrive.find(query)
-      .populate("companyId", "name logo")
-      .populate("postedByHR", "email")
-      .sort({ createdAt: -1 });
+    if (status !== 'ALL') {
+      query.$and.push({ status: status });
+    }
 
-    res.status(200).json({ message: "Job drives fetched successfully", data: jobDrives });
+    if (search) {
+      query.$and.push({
+        $or: [
+          { title: { $regex: search, $options: 'i' } },
+          { companyName: { $regex: search, $options: 'i' } }
+        ]
+      });
+    }
+
+    const skip = (page - 1) * limit;
+    const totalRows = await JobDrive.countDocuments(query);
+    const totalPages = Math.ceil(totalRows / limit);
+
+    const jobDrives = await JobDrive.find(query)
+      .populate("companyId", "name logoUrl")
+      .populate("postedByHR", "email")
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({ 
+      message: "Job drives fetched successfully", 
+      data: jobDrives,
+      pagination: {
+        page,
+        limit,
+        totalRows,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error("Get All Job Drives Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -99,12 +155,61 @@ exports.getAllJobDrives = async (req, res) => {
 // Get HR Specific Job Drives
 exports.getHRJobDrives = async (req, res) => {
   try {
-    const jobDrives = await JobDrive.find({ postedByHR: req.user.id })
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const status = req.query.status || 'ALL';
+    const search = req.query.search || '';
+    const sort = req.query.sort || 'newest';
+    
+    let sortObj = { createdAt: -1 };
+    if (sort === 'oldest') {
+      sortObj = { createdAt: 1 };
+    } else if (sort === 'deadline_soon') {
+      sortObj = { deadline: 1 };
+    } else if (sort === 'deadline_late') {
+      sortObj = { deadline: -1 };
+    } else if (sort === 'salary_high') {
+      sortObj = { packageLPA: -1 };
+    } else if (sort === 'salary_low') {
+      sortObj = { packageLPA: 1 };
+    } else if (sort === 'title_az') {
+      sortObj = { title: 1 };
+    } else if (sort === 'title_za') {
+      sortObj = { title: -1 };
+    }
+
+    const query = { postedByHR: req.user.id };
+
+    if (status !== 'ALL') {
+      query.status = status;
+    }
+
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const totalRows = await JobDrive.countDocuments(query);
+    const totalPages = Math.ceil(totalRows / limit);
+
+    const jobDrives = await JobDrive.find(query)
       .populate("companyId", "name")
       .populate("postedByHR", "email")
-      .sort({ createdAt: -1 });
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit);
 
-    res.status(200).json({ message: "Job drives fetched successfully", data: jobDrives });
+    res.status(200).json({ 
+      message: "Job drives fetched successfully", 
+      data: jobDrives,
+      pagination: {
+        page,
+        limit,
+        totalRows,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error("Get HR Job Drives Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -311,6 +416,8 @@ exports.deleteJobDrive = async (req, res) => {
 exports.getDriveApplications = async (req, res) => {
   try {
     const { id } = req.params;
+    const { page = 1, limit = 10, search = "", status = "ALL", sort = "newest" } = req.query;
+    
     const drive = await JobDrive.findById(id);
     if (!drive) return res.status(404).json({ message: "Job drive not found" });
 
@@ -319,7 +426,7 @@ exports.getDriveApplications = async (req, res) => {
     
     const profiles = await StudentProfile.find({ userId: { $in: studentIds } });
 
-    const enrichedApplications = applications.map(app => {
+    let enrichedApplications = applications.map(app => {
       const profile = profiles.find(p => p.userId.toString() === app.studentId._id.toString());
       return {
         _id: app._id,
@@ -343,7 +450,63 @@ exports.getDriveApplications = async (req, res) => {
       };
     });
 
-    res.status(200).json({ message: "Applications fetched successfully", data: enrichedApplications, driveStatus: drive.status });
+    if (status && status !== "ALL") {
+      enrichedApplications = enrichedApplications.filter(app => app.status === status);
+    }
+    
+    // Search
+    if (search) {
+      const s = search.toLowerCase().trim();
+      enrichedApplications = enrichedApplications.filter(app => {
+        const fullName = `${app.firstName || ''} ${app.lastName || ''}`.toLowerCase().trim();
+        return (
+          fullName.includes(s) ||
+          (app.firstName && app.firstName.toLowerCase().includes(s)) ||
+          (app.lastName && app.lastName.toLowerCase().includes(s)) ||
+          (app.email && app.email.toLowerCase().includes(s)) ||
+          (app.rollNumber && app.rollNumber.toLowerCase().includes(s)) ||
+          (app.branch && app.branch.toLowerCase().includes(s))
+        );
+      });
+    }
+
+    // Sorting
+    enrichedApplications.sort((a, b) => {
+      switch (sort) {
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'cgpa_high':
+          return (b.cgpa || 0) - (a.cgpa || 0);
+        case 'cgpa_low':
+          return (a.cgpa || 0) - (b.cgpa || 0);
+        case 'name_az':
+          return (a.firstName || '').localeCompare(b.firstName || '');
+        case 'name_za':
+          return (b.firstName || '').localeCompare(a.firstName || '');
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+
+    // Pagination
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    const paginatedData = enrichedApplications.slice(startIndex, endIndex);
+
+    res.status(200).json({ 
+      message: "Applications fetched successfully", 
+      data: paginatedData,
+      pagination: {
+        totalDocuments: enrichedApplications.length,
+        totalPages: Math.ceil(enrichedApplications.length / limitNum),
+        currentPage: pageNum,
+        limit: limitNum
+      },
+      driveStatus: drive.status 
+    });
   } catch (error) {
     console.error("Get Drive Applications Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -375,6 +538,7 @@ exports.updateApplicationStatus = async (req, res) => {
         subject = 'Congratulations! You have been Selected';
         content = `<p>Congratulations! You have been selected for the <b>${application.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
         logType = 'APPLICATION_HIRED';
+        await StudentProfile.findOneAndUpdate({ userId: application.studentId._id }, { isLocked: true });
       } else if (status === 'SHORTLISTED') {
         subject = 'Update on your Application: Shortlisted!';
         content = `<p>Congratulations! You have been shortlisted for the <b>${application.jobDriveId.title}</b> role! Please stay tuned for further updates regarding the next rounds.</p>`;
@@ -446,6 +610,7 @@ exports.bulkUpdateApplicationStatus = async (req, res) => {
           subject = 'Congratulations! You have been Selected';
           content = `<p>Congratulations! You have been selected for the <b>${app.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
           logType = 'APPLICATION_HIRED';
+          await StudentProfile.findOneAndUpdate({ userId: app.studentId._id }, { isLocked: true });
         } else if (status === 'SHORTLISTED') {
           subject = 'Update on your Application: Shortlisted!';
           content = `<p>Congratulations! You have been shortlisted for the <b>${app.jobDriveId.title}</b> role! Please stay tuned for further updates regarding the next rounds.</p>`;

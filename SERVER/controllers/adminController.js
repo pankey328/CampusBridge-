@@ -7,7 +7,7 @@ const { sendMail } = require("../utils/emailUtils");
 // Get All HRs
 exports.getAllHRs = async (req, res) => {
   try {
-    const { status } = req.query; // PENDING / ACTIVE / INACTIVE
+    const { status = "ACTIVE", search = '', sort = 'newest', page = 1, limit = 10 } = req.query;
 
     const query = { role: "HR" };
     if (status === "PENDING") {
@@ -20,7 +20,7 @@ exports.getAllHRs = async (req, res) => {
       query.status = "INACTIVE";
     }
 
-    const users = await User.find(query).select("email status isApproved");
+    const users = await User.find(query).select("email status isApproved createdAt");
     const userIds = users.map(u => u._id);
 
     const HRProfile = require("../models/HRProfile");
@@ -29,7 +29,7 @@ exports.getAllHRs = async (req, res) => {
     const companyNames = profiles.map(p => p.companyName);
     const companies = await Company.find({ name: { $in: companyNames } });
 
-    const hrs = profiles.map(profile => {
+    let hrs = profiles.map(profile => {
       const user = users.find(u => u._id.toString() === profile.userId.toString());
       const company = companies.find(c => c.name === profile.companyName);
       return {
@@ -37,6 +37,7 @@ exports.getAllHRs = async (req, res) => {
         email: user.email,
         status: user.status,
         isApproved: user.isApproved,
+        createdAt: user.createdAt,
         companyName: profile.companyName,
         designation: profile.designation,
         phone: profile.phone,
@@ -44,13 +45,47 @@ exports.getAllHRs = async (req, res) => {
         industry: company?.industry || "",
         website: company?.website || "",
         gstin: company?.gstin || "",
+        logoUrl: company?.logoUrl || "",
         companyId: company?._id || null,
       };
     });
 
-    res
-      .status(200)
-      .json({ message: "Hr Data fetched successfully", data: hrs });
+    if (search) {
+      const searchLower = search.toLowerCase();
+      hrs = hrs.filter(hr => 
+        (hr.companyName && hr.companyName.toLowerCase().includes(searchLower)) || 
+        (hr.email && hr.email.toLowerCase().includes(searchLower))
+      );
+    }
+
+    if (sort === 'newest') {
+      hrs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sort === 'oldest') {
+      hrs.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sort === 'company_az') {
+      hrs.sort((a, b) => (a.companyName || '').localeCompare(b.companyName || ''));
+    } else if (sort === 'company_za') {
+      hrs.sort((a, b) => (b.companyName || '').localeCompare(a.companyName || ''));
+    }
+
+    const parsedPage = parseInt(page) || 1;
+    const parsedLimit = parseInt(limit) || 10;
+    const totalRows = hrs.length;
+    const totalPages = Math.ceil(totalRows / parsedLimit);
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const paginatedHrs = hrs.slice(skip, skip + parsedLimit);
+
+    res.status(200).json({ 
+      message: "Hr Data fetched successfully", 
+      data: paginatedHrs,
+      pagination: {
+        page: parsedPage,
+        limit: parsedLimit,
+        totalRows,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error("Get All HRs Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -221,7 +256,7 @@ exports.bulkImportDryRun = async (req, res) => {
   try {
     let jsonArray = [];
 
-    if (req.body.sheetUrl) {
+    if (req.body?.sheetUrl) {
       try {
         const match = req.body.sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (!match) return res.status(400).json({ message: "Invalid Google Sheet URL" });
@@ -233,10 +268,10 @@ exports.bulkImportDryRun = async (req, res) => {
       } catch (error) {
         return res.status(400).json({ message: "Failed to fetch data from Google Sheet. Ensure the link is public." });
       }
-    } else if (req.files && req.files.file) {
+    } else if (req.files?.file) {
       const fileBuffer = req.files.file.data;
       jsonArray = await csv().fromString(fileBuffer.toString('utf8'));
-    } else if (req.body.students) {
+    } else if (req.body?.students) {
       jsonArray = typeof req.body.students === 'string' ? JSON.parse(req.body.students) : req.body.students;
     } else {
       return res.status(400).json({ message: "No CSV file, JSON data, or Google Sheet URL provided" });
@@ -300,10 +335,10 @@ exports.bulkImportCommit = async (req, res) => {
   try {
     let jsonArray = [];
 
-    if (req.files && req.files.file) {
+    if (req.files?.file) {
       const fileBuffer = req.files.file.data;
       jsonArray = await csv().fromString(fileBuffer.toString('utf8'));
-    } else if (req.body.students) {
+    } else if (req.body?.students) {
       jsonArray = typeof req.body.students === 'string' ? JSON.parse(req.body.students) : req.body.students;
     } else {
       return res.status(400).json({ message: "No CSV file or JSON data provided" });
@@ -367,11 +402,12 @@ exports.bulkImportCommit = async (req, res) => {
           userId: newUser._id,
           firstName: student.firstName,
           lastName: student.lastName,
-          rollNumber: student.enrollmentNumber,
-          branch: student.department || "",
-          passoutYear: student.graduationYear || new Date().getFullYear(),
+          rollNumber: student.enrollmentNumber || student.rollNumber,
+          branch: student.branch || student.department || "",
+          passoutYear: student.passoutYear || student.graduationYear || new Date().getFullYear(),
           cgpa: student.cgpa ? parseFloat(student.cgpa) : 0,
           activeBacklogs: student.activeBacklogs ? parseInt(student.activeBacklogs) : 0,
+          phone: student.phone || "",
           createdBy: req.user.id,
         });
         await newProfile.save({ session });
@@ -661,40 +697,92 @@ exports.addStudentManually = async (req, res) => {
   }
 };
 
-// Get All Students with filters
+// Get All Students
 exports.getAllStudents = async (req, res) => {
   try {
-    const { status = "ACTIVE", search = "" } = req.query;
+    const { status = "ACTIVE", search = "", sort = "newest", page = 1, limit = 10 } = req.query;
 
-    const query = { role: "STUDENT", status };
-    if (search) {
-      query.email = { $regex: search, $options: "i" };
+    const query = { role: "STUDENT" };
+    if (status && status !== "ALL") {
+      query.status = status;
     }
 
-    const users = await User.find(query).select("email status isApproved");
+    const users = await User.find(query).select("email status isApproved createdAt");
     const userIds = users.map(u => u._id);
 
     const profiles = await StudentProfile.find({ userId: { $in: userIds } });
 
-    const students = profiles.map(profile => {
-      const user = users.find(u => u._id.toString() === profile.userId.toString());
+    let students = users.map(user => {
+      const profile = profiles.find(p => p.userId.toString() === user._id.toString());
       return {
         id: user._id,
         email: user.email,
         status: user.status,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        rollNumber: profile.rollNumber,
-        branch: profile.branch,
-        passoutYear: profile.passoutYear,
-        cgpa: profile.cgpa,
-        isLocked: profile.isLocked,
+        createdAt: user.createdAt,
+        firstName: profile?.firstName || "",
+        lastName: profile?.lastName || "",
+        rollNumber: profile?.rollNumber || "",
+        branch: profile?.branch || "",
+        passoutYear: profile?.passoutYear || "",
+        cgpa: profile?.cgpa || 0,
+        activeBacklogs: profile?.activeBacklogs || 0,
+        isLocked: profile?.isLocked || false,
       };
     });
 
-    res
-      .status(200)
-      .json({ message: "All students fetched successfully", data: students });
+    // Search 
+    if (search) {
+      const s = search.toLowerCase().trim();
+      students = students.filter(st => {
+        const fullName = `${st.firstName || ''} ${st.lastName || ''}`.toLowerCase().trim();
+        return (
+          fullName.includes(s) ||
+          (st.firstName && st.firstName.toLowerCase().includes(s)) ||
+          (st.lastName && st.lastName.toLowerCase().includes(s)) ||
+          (st.email && st.email.toLowerCase().includes(s)) ||
+          (st.rollNumber && st.rollNumber.toLowerCase().includes(s)) ||
+          (st.branch && st.branch.toLowerCase().includes(s))
+        );
+      });
+    }
+
+    // Sorting 
+    students.sort((a, b) => {
+      switch (sort) {
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'cgpa_high':
+          return (b.cgpa || 0) - (a.cgpa || 0);
+        case 'cgpa_low':
+          return (a.cgpa || 0) - (b.cgpa || 0);
+        case 'name_az':
+          return (a.firstName || '').localeCompare(b.firstName || '');
+        case 'name_za':
+          return (b.firstName || '').localeCompare(a.firstName || '');
+        case 'roll_asc':
+          return (a.rollNumber || '').localeCompare(b.rollNumber || '');
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+
+    // Pagination
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const startIndex = (pageNum - 1) * limitNum;
+    const paginatedStudents = students.slice(startIndex, startIndex + limitNum);
+
+    res.status(200).json({
+      message: "All students fetched successfully",
+      data: paginatedStudents,
+      pagination: {
+        totalDocuments: students.length,
+        totalPages: Math.ceil(students.length / limitNum) || 1,
+        currentPage: pageNum,
+        limit: limitNum
+      }
+    });
   } catch (error) {
     console.error("Get All Students Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -793,7 +881,6 @@ exports.softDeleteStudent = async (req, res) => {
     user.status = "INACTIVE";
     await user.save();
     
-    // lock student profile
     await StudentProfile.findOneAndUpdate({ userId: user._id }, { isLocked: true });
 
     res.status(200).json({ message: "Student moved to inactive (Soft Deleted)." });
@@ -853,11 +940,48 @@ exports.toggleStudentLock = async (req, res) => {
   }
 };
 
-// Get all notification logs
+// Get all notification logs 
 exports.getNotificationLogs = async (req, res) => {
   try {
-    const logs = await NotificationLog.find().sort({ createdAt: -1 }).limit(100);
-    res.status(200).json(logs);
+    const { page = 1, limit = 10, search = "", type = "ALL", status = "ALL", sort = "newest" } = req.query;
+
+    const query = {};
+    if (status && status !== "ALL") {
+      query.status = status;
+    }
+    if (type && type !== "ALL") {
+      query.type = type;
+    }
+    if (search) {
+      const s = search.trim();
+      query.$or = [
+        { recipientEmail: { $regex: s, $options: "i" } },
+        { subject: { $regex: s, $options: "i" } },
+        { type: { $regex: s, $options: "i" } },
+      ];
+    }
+
+    const sortCriteria = sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalDocuments = await NotificationLog.countDocuments(query);
+    const logs = await NotificationLog.find(query)
+      .sort(sortCriteria)
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({
+      data: logs,
+      pagination: {
+        totalDocuments,
+        totalPages: Math.ceil(totalDocuments / limitNum) || 1,
+        currentPage: pageNum,
+        limit: limitNum,
+      },
+    });
   } catch (error) {
     console.error("Get Notification Logs Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -874,21 +998,26 @@ exports.resendNotification = async (req, res) => {
     }
 
     log.attempts += 1;
-    log.status = "PENDING";
-    await log.save();
 
     try {
       await sendMail(log.recipientEmail, log.subject, log.content);
       log.status = "DELIVERED";
       log.deliveredAt = new Date();
       log.errorMessage = "";
+      await log.save();
+
+      return res.status(200).json({ message: "Email resent successfully.", log });
     } catch (err) {
       log.status = "FAILED";
-      log.errorMessage = err.message || "Unknown error";
-    }
-    await log.save();
+      log.errorMessage = err.message || "Failed to send email";
+      await log.save();
 
-    res.status(200).json({ message: "Resend attempt complete.", log });
+      return res.status(400).json({
+        message: `Failed to send email: ${err.message}`,
+        error: err.message,
+        log,
+      });
+    }
   } catch (error) {
     console.error("Resend Notification Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -954,5 +1083,69 @@ exports.resendHRActivation = async (req, res) => {
   } catch (error) {
     console.error("Resend HR Activation Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Get System Dashboard Stats
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const JobDrive = require("../models/JobDrive");
+    const Application = require("../models/Application");
+    const StudentProfile = require("../models/StudentProfile");
+    const NotificationLog = require("../models/NotificationLog");
+
+    const [
+      totalStudents,
+      placedStudentsCount,
+      totalHrs,
+      pendingHrs,
+      totalTpos,
+      totalDrives,
+      activeDrives,
+      pendingDrives,
+      completedDrives,
+      totalApplications,
+      hiredApplications,
+      recentDrives,
+      recentLogs
+    ] = await Promise.all([
+      User.countDocuments({ role: "STUDENT" }),
+      StudentProfile.countDocuments({ isLocked: true }),
+      User.countDocuments({ role: "HR", isApproved: true }),
+      User.countDocuments({ role: "HR", isApproved: false }),
+      User.countDocuments({ role: "TPO" }),
+      JobDrive.countDocuments(),
+      JobDrive.countDocuments({ status: "ACTIVE" }),
+      JobDrive.countDocuments({ status: "PENDING_APPROVAL" }),
+      JobDrive.countDocuments({ status: "COMPLETED" }),
+      Application.countDocuments(),
+      Application.countDocuments({ currentStatus: { $in: ["HIRED", "OFFERED", "ACCEPTED"] } }),
+      JobDrive.find().sort({ createdAt: -1 }).limit(5).select("title companyName packageLPA status deadline createdAt"),
+      NotificationLog.find().sort({ createdAt: -1 }).limit(5).select("recipientEmail subject status createdAt")
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        students: { total: totalStudents, placed: placedStudentsCount },
+        hrs: { total: totalHrs, pending: pendingHrs },
+        tpos: { total: totalTpos },
+        drives: {
+          total: totalDrives,
+          active: activeDrives,
+          pending: pendingDrives,
+          completed: completedDrives
+        },
+        applications: {
+          total: totalApplications,
+          hired: hiredApplications
+        },
+        recentDrives,
+        recentLogs
+      }
+    });
+  } catch (error) {
+    console.error("Dashboard Stats Error:", error);
+    res.status(500).json({ message: "Failed to fetch dashboard stats", error: error.message });
   }
 };

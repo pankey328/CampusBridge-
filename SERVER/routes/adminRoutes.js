@@ -4,6 +4,14 @@ const adminController = require("../controllers/adminController");
 const jobDriveController = require("../controllers/jobDriveController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
+// Get Dashboard KPI Stats
+router.get(
+  "/dashboard-stats",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO", "ADMIN"),
+  adminController.getDashboardStats
+);
+
 // Approve HRs and send email (SUPERADMIN, TPO)
 router.put(
   "/approve-hr/:id",

@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, Shield, RefreshCw, X, Save, Eye, ExternalLink } from 'lucide-react';
 import api from '../../services/api';
+import useDebounce from '../../hooks/useDebounce';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('ACTIVE'); // ACTIVE or INACTIVE
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 1000);
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortOption, setSortOption] = useState('newest');
+  const [totalPages, setTotalPages] = useState(1);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,21 +39,25 @@ const StudentManagement = () => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/admin/students?status=${activeTab}&search=${searchTerm}`, getAuthHeader());
+      let queryString = `?page=${page}&limit=${limit}&status=${activeTab}&sort=${sortOption}`;
+      if (debouncedSearch) {
+        queryString += `&search=${debouncedSearch}`;
+      }
+      const { data } = await api.get(`/admin/students${queryString}`, getAuthHeader());
       setStudents(data.data || []);
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages);
+      }
     } catch (error) {
       console.error("Failed to fetch students", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    // Searching
-    const timeout = setTimeout(() => {
-      fetchStudents();
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [activeTab, searchTerm]);
+    fetchStudents();
+  }, [activeTab, debouncedSearch, page, limit, sortOption]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -142,44 +153,70 @@ const StudentManagement = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn w-full pb-8">
+      {/* Header */}
+      <div className="flex justify-between items-center shrink-0">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Student Management</h1>
+          <p className="text-gray-400">Manage student profiles, academic records, and application access.</p>
+        </div>
+      </div>
+
       {/* Controls Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
 
         {/* Tabs */}
-        <div className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800">
+        <div className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800 flex-wrap sm:flex-nowrap">
           <button
-            onClick={() => setActiveTab('ACTIVE')}
+            onClick={() => { setActiveTab('ACTIVE'); setPage(1); }}
             className={`px-6 py-2 rounded-md transition-all ${activeTab === 'ACTIVE' ? 'bg-[#00ED64] text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
           >
             Active
           </button>
           <button
-            onClick={() => setActiveTab('PENDING')}
+            onClick={() => { setActiveTab('PENDING'); setPage(1); }}
             className={`px-6 py-2 rounded-md transition-all ${activeTab === 'PENDING' ? 'bg-yellow-500 text-[#0A192F] font-bold' : 'text-gray-400 hover:text-white'}`}
           >
             Pending
           </button>
           <button
-            onClick={() => setActiveTab('INACTIVE')}
+            onClick={() => { setActiveTab('INACTIVE'); setPage(1); }}
             className={`px-6 py-2 rounded-md transition-all ${activeTab === 'INACTIVE' ? 'bg-red-500 text-white font-bold' : 'text-gray-400 hover:text-white'}`}
           >
             Inactive
           </button>
         </div>
 
-        {/* Search & Add */}
-        <div className="flex w-full md:w-auto space-x-3">
-          <div className="relative w-full md:w-64">
+        {/* Search, Sort & Add */}
+        <div className="flex flex-col sm:flex-row w-full xl:w-auto space-y-3 sm:space-y-0 sm:space-x-3">
+          <select
+            value={sortOption}
+            onChange={(e) => {
+              setSortOption(e.target.value);
+              setPage(1);
+            }}
+            className="bg-[#0A192F] border border-gray-700 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:border-[#00ED64]"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="cgpa_high">Highest CGPA</option>
+            <option value="cgpa_low">Lowest CGPA</option>
+            <option value="name_az">Name (A-Z)</option>
+            <option value="name_za">Name (Z-A)</option>
+            <option value="roll_asc">Enrollment No. (Asc)</option>
+          </select>
+
+          <div className="relative w-full sm:w-80 md:w-96">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Search by email..."
+              placeholder="Search by name, roll, email..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
               className="w-full bg-[#0A192F] border border-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-[#00ED64] focus:ring-1 focus:ring-[#00ED64]"
             />
           </div>
+
           <button
             onClick={() => {
               setFormData({ firstName: '', lastName: '', email: '', rollNumber: '', branch: '', passoutYear: new Date().getFullYear(), cgpa: 0, activeBacklogs: 0 });
@@ -194,7 +231,12 @@ const StudentManagement = () => {
       </div>
 
       {/* Data Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-800">
+      <div className="relative rounded-lg border border-gray-800 overflow-x-auto w-full bg-[#0A192F]/50">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm rounded-lg min-h-[200px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
+          </div>
+        )}
         <table className="w-full text-left text-sm text-gray-300">
           <thead className="text-xs uppercase bg-[#0A192F] text-gray-400">
             <tr>
@@ -207,11 +249,7 @@ const StudentManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">Loading students...</td>
-              </tr>
-            ) : students.length === 0 ? (
+            {!loading && students.length === 0 ? (
               <tr>
                 <td colSpan="6" className="px-6 py-8 text-center text-gray-500">No students found.</td>
               </tr>
@@ -234,7 +272,7 @@ const StudentManagement = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right space-x-3">
-                    {/* Toggle Apply Lock Button */}
+                    {/* Toggle Lock Button */}
                     <button
                       onClick={() => handleToggleLock(student.id)}
                       title={student.isLocked ? "Unlock Applications" : "Lock Applications"}
@@ -274,6 +312,57 @@ const StudentManagement = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Footer */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#0A192F] p-4 rounded-lg border border-gray-800 w-full">
+        <div className="flex items-center text-sm text-gray-400">
+          <span>Show</span>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            className="mx-2 bg-[#112240] border border-gray-700 rounded px-2 py-1 text-white focus:outline-none focus:border-[#00ED64]"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span>students per page</span>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                page === 1
+                  ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                  : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                page === totalPages || totalPages === 0
+                  ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                  : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Add / Edit Modal */}
@@ -370,7 +459,6 @@ const StudentManagement = () => {
               </button>
             </div>
 
-            {/* Content Area */}
             <div className="p-8 overflow-y-auto bg-[#0A192F]/30 flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 

@@ -42,6 +42,10 @@ const jobDriveSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    jdFileUrl: {
+      type: String,
+      default: "",
+    },
     
     eligibleBranches: {
       type: [String], 

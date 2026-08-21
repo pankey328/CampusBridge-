@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/authSlice';
-import { LayoutDashboard, Briefcase, LogOut, Settings, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Briefcase, LogOut, Settings, Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 
 const HRLayout = () => {
@@ -20,6 +20,7 @@ const HRLayout = () => {
   const navItems = [
     { path: '/hr/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { path: '/hr/job-drives', icon: <Briefcase size={20} />, label: 'My Job Drives' },
+    { path: '/hr/profile', icon: <User size={20} />, label: 'My Profile' },
     { path: '/hr/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
 
@@ -77,7 +78,7 @@ const HRLayout = () => {
         <div className="absolute top-0 left-0 w-full h-96 bg-[var(--color-brand-primary)]/5 blur-[120px] pointer-events-none z-0"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 blur-[120px] pointer-events-none z-0"></div>
 
-        <div className="flex-1 overflow-y-auto p-8 relative z-10 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-6 lg:p-8 relative z-10 scrollbar-hide flex flex-col">
           <Outlet />
         </div>
       </main>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Eye, Edit2, Trash2, Calendar, MapPin, Building2, Briefcase, Users } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import useDebounce from '../../hooks/useDebounce';
 
 const JobDrives = () => {
   const [drives, setDrives] = useState([]);
@@ -17,14 +18,35 @@ const JobDrives = () => {
   
   const navigate = useNavigate();
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortOption, setSortOption] = useState("newest");
+  const debouncedSearch = useDebounce(searchTerm, 1000);
+
   const getAuthHeader = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   });
 
   const fetchDrives = async () => {
     try {
-      const response = await api.get('/admin/job-drives', getAuthHeader());
+      setLoading(true);
+      let queryString = `?page=${page}&limit=${limit}`;
+      queryString += `&sort=${sortOption}`;
+
+      if (activeTab && activeTab !== "ALL") {
+        queryString += `&status=${activeTab}`;
+      }
+
+      if (debouncedSearch) {
+        queryString += `&search=${debouncedSearch}`;
+      }
+
+      const response = await api.get(`/admin/job-drives${queryString}`, getAuthHeader());
       setDrives(response.data.data);
+      if (response.data.pagination) {
+        setTotalPages(response.data.pagination.totalPages);
+      }
     } catch (error) {
       toast.error('Failed to fetch job drives');
     } finally {
@@ -34,9 +56,7 @@ const JobDrives = () => {
 
   useEffect(() => {
     fetchDrives();
-  }, []);
-
-
+  }, [page, limit, activeTab, debouncedSearch, sortOption]);
   const handleStatusUpdate = async (id, newStatus) => {
     if (newStatus === 'CANCELLED' && !window.confirm("Are you sure you want to cancel this drive? This will notify scheduled students.")) return;
     if (newStatus === 'REJECTED') {
@@ -83,17 +103,11 @@ const JobDrives = () => {
     }
   };
 
-  const filteredDrives = drives.filter(drive => {
-    const titleMatch = drive.title ? drive.title.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-    const companyMatch = drive.companyName ? drive.companyName.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-    const matchesSearch = titleMatch || companyMatch;
-    const matchesTab = activeTab === 'ALL' || drive.status === activeTab;
-    return matchesSearch && matchesTab;
-  });
+
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen">
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-6 animate-fadeIn w-full pb-8">
+      <div className="flex justify-between items-center shrink-0">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Job Drives</h1>
           <p className="text-[var(--color-text-secondary)]">Manage campus placement drives, eligibility, and rounds.</p>
@@ -107,45 +121,72 @@ const JobDrives = () => {
         </button>
       </div>
 
-      <div className="glass-panel rounded-2xl overflow-hidden flex flex-col h-[calc(100vh-200px)]">
-        {/* Toolbar */}
-        <div className="p-6 border-b border-[var(--color-bg-input)] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-          <div className="flex space-x-2">
+      {/* Toolbar */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 shrink-0">
+        <div
+            className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800 overflow-x-auto pb-2 xl:pb-0 w-full xl:w-auto flex-nowrap"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {['ALL', 'ACTIVE', 'PENDING_APPROVAL', 'REJECTED', 'DRAFT', 'COMPLETED', 'CANCELLED'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab
-                  ? 'bg-[#00ED64] text-[#0A192F]'
-                  : 'text-gray-400 hover:text-white hover:bg-[#112240]'
-              }`}
-            >
-              {tab.replace('_', ' ')}
-            </button>
-          ))}
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setPage(1);
+                }}
+                className={`px-4 py-2 rounded-md whitespace-nowrap text-sm font-medium transition-all ${
+                  activeTab === tab
+                    ? 'bg-[#00ED64] text-[#0A192F] font-bold'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tab.replace('_', ' ')}
+              </button>
+            ))}
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search by title or company..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-[var(--color-bg-input)] border border-[var(--color-bg-input)] rounded-lg text-white focus:outline-none focus:border-[#00ED64] w-full md:w-64"
-            />
+          <div className="flex flex-col md:flex-row w-full xl:w-auto space-y-3 md:space-y-0 md:space-x-3">
+            <select
+              value={sortOption}
+              onChange={(e) => {
+                setSortOption(e.target.value);
+                setPage(1);
+              }}
+              className="bg-[#0A192F] border border-gray-700 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:border-[#00ED64]"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="deadline_soon">Ending Soonest</option>
+              <option value="deadline_late">Ending Latest</option>
+              <option value="salary_high">Highest Salary</option>
+              <option value="salary_low">Lowest Salary</option>
+              <option value="title_az">Title (A-Z)</option>
+              <option value="title_za">Title (Z-A)</option>
+            </select>
+
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search by title or company..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#0A192F] border border-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-[#00ED64] focus:ring-1 focus:ring-[#00ED64]"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
-            </div>
-          ) : filteredDrives.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-secondary)]">
+      {/* Content */}
+      <div className="flex-1 relative flex flex-col">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-bg-primary)]/80 backdrop-blur-sm">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
+          </div>
+        )}
+        <div className="flex-1 pb-4 flex flex-col">
+          {!loading && drives.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-[var(--color-text-secondary)] min-h-[300px]">
               <Briefcase className="w-16 h-16 mb-4 opacity-50" />
               <p className="text-lg">No job drives found.</p>
               <button
@@ -157,23 +198,28 @@ const JobDrives = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDrives.map((drive) => (
+              {drives.map((drive) => (
                 <div key={drive._id} className="bg-[#112240] border border-gray-800 rounded-xl p-5 hover:border-[#00ED64]/50 transition-all group flex flex-col">
 
                   <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-white group-hover:text-[#00ED64] transition-colors">{drive.title}</h3>
-                      <div className="flex flex-col mt-2 gap-1">
-                        <div className="flex items-center text-[var(--color-text-secondary)] text-sm">
-                          <Building2 size={14} className="mr-2" />
-                          {drive.companyId?.name || drive.companyName || 'Company'}
-                        </div>
-                        {drive.postedByHR?.email && (
+                    <div className="flex items-center space-x-3">
+                      {drive.companyId?.logoUrl ? (
+                        <img src={drive.companyId.logoUrl} alt="Logo" className="w-10 h-10 object-contain rounded bg-white p-1 shrink-0" />
+                      ) : null}
+                      <div>
+                        <h3 className="text-lg font-bold text-white group-hover:text-[#00ED64] transition-colors">{drive.title}</h3>
+                        <div className="flex flex-col mt-2 gap-1">
                           <div className="flex items-center text-[var(--color-text-secondary)] text-sm">
-                            <Users size={14} className="mr-2" />
-                            {drive.postedByHR.email}
+                            <Building2 size={14} className="mr-2" />
+                            {drive.companyId?.name || drive.companyName || 'Company'}
                           </div>
-                        )}
+                          {drive.postedByHR?.email && (
+                            <div className="flex items-center text-[var(--color-text-secondary)] text-sm">
+                              <Users size={14} className="mr-2" />
+                              {drive.postedByHR.email}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -261,7 +307,58 @@ const JobDrives = () => {
         </div>
       </div>
 
-      {/* Rejection Modal */}
+      {/* Pagination Footer */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#0A192F] p-4 rounded-lg border border-gray-800 w-full">
+          <div className="flex items-center text-sm text-gray-400">
+            <span>Show</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="mx-2 bg-[#112240] border border-[var(--color-bg-input)] rounded px-2 py-1 text-white focus:outline-none focus:border-[#00ED64]"
+            >
+              <option value={6}>6</option>
+              <option value={12}>12</option>
+              <option value={24}>24</option>
+              <option value={54}>54</option>
+            </select>
+            <span>cards per page</span>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-400">
+              Page {page} of {totalPages}
+            </span>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                  page === 1
+                    ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                    : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || totalPages === 0}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                  page === totalPages || totalPages === 0
+                    ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                    : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+
+      {/* Modals */}
       {isRejectModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-[#112240] border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up">
@@ -312,9 +409,13 @@ const JobDrives = () => {
           <div className="bg-[#112240] border border-gray-700 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-slide-up">
             <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#0A192F]">
               <div>
-                <h3 className="text-2xl font-bold text-white mb-1">{viewDrive.title}</h3>
+                <div className="flex items-center space-x-4 mb-2">
+                  {viewDrive.companyId?.logoUrl && (
+                    <img src={viewDrive.companyId.logoUrl} alt="Logo" className="w-12 h-12 object-contain rounded bg-white p-1 shrink-0" />
+                  )}
+                  <h2 className="text-2xl font-bold text-white pr-8">{viewDrive.title}</h2>
+                </div>
                 <div className="flex items-center text-sm text-[var(--color-text-secondary)]">
-                  <Building2 size={14} className="mr-1" />
                   <span className="mr-4">{viewDrive.companyId?.name || viewDrive.companyName}</span>
                   {viewDrive.postedByHR?.email && (
                     <>
@@ -355,6 +456,19 @@ const JobDrives = () => {
                 <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap bg-[#0A192F] p-4 rounded-xl border border-gray-800">
                   {viewDrive.description}
                 </div>
+                {viewDrive.jdFileUrl && (
+                  <div className="mt-3">
+                    <a
+                      href={viewDrive.jdFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#00ED64]/10 hover:bg-[#00ED64]/20 border border-[#00ED64]/30 rounded-lg text-xs font-bold text-[#00ED64] transition-all"
+                    >
+                      <Briefcase size={14} />
+                      <span>View Official JD Document (PDF)</span>
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div>

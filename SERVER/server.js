@@ -44,6 +44,19 @@ app.use("/api/student", studentRoutes);
 const interviewRoutes = require("./routes/interviewRoutes");
 app.use("/api/interviews", interviewRoutes);
 
+// File Upload Routes (Cloudinary)
+const uploadRoutes = require("./routes/uploadRoutes");
+app.use("/api/upload", uploadRoutes);
+
+// AI Practice Routes
+const aiRoutes = require("./routes/aiRoutes");
+app.use("/api/ai", aiRoutes);
+
+// Fallback 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: "API route not found" });
+});
+
 mongoose
   .connect(url)
   .then(() => {

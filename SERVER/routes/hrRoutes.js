@@ -9,6 +9,12 @@ router.post("/register", hrController.registerHR);
 
 router.use(protect);
 router.use(authorizeRoles("HR"));
+// HR Profile
+router.get("/profile", hrController.getHRProfile);
+router.put("/profile", hrController.updateHRProfile);
+
+// HR Dashboard
+router.get("/dashboard", hrController.getDashboardOverview);
 
 // HR Job Drives
 router.get("/job-drives", jobDriveController.getHRJobDrives);

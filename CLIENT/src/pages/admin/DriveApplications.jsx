@@ -4,6 +4,7 @@ import { ArrowLeft, CheckSquare, Search, ChevronDown, CheckCircle2, Clock, XCirc
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import InterviewScheduleModal from '../../components/common/InterviewScheduleModal';
+import useDebounce from '../../hooks/useDebounce';
 
 const DriveApplications = () => {
   const { id } = useParams();
@@ -14,6 +15,11 @@ const DriveApplications = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [sortOption, setSortOption] = useState('newest');
+  const [totalPages, setTotalPages] = useState(1);
   const [driveStatus, setDriveStatus] = useState('');
   const [selectedAppIds, setSelectedAppIds] = useState([]);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -24,14 +30,27 @@ const DriveApplications = () => {
 
   useEffect(() => {
     fetchApplications();
-  }, [id]);
+  }, [id, activeTab, debouncedSearch, page, limit, sortOption]);
 
   const fetchApplications = async () => {
     try {
-      const { data } = await api.get(`${basePath}/job-drives/${id}/applications`, {
+      setLoading(true);
+      let queryString = `?page=${page}&limit=${limit}`;
+      queryString += `&sort=${sortOption}`;
+
+      if (activeTab && activeTab !== "ALL") {
+        queryString += `&status=${activeTab}`;
+      }
+
+      if (debouncedSearch) {
+        queryString += `&search=${debouncedSearch}`;
+      }
+
+      const { data } = await api.get(`${basePath}/job-drives/${id}/applications${queryString}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setApplications(data.data);
+      if (data.pagination) setTotalPages(data.pagination.totalPages);
       if (data.driveStatus) setDriveStatus(data.driveStatus);
     } catch (error) {
       toast.error('Failed to load applications');
@@ -77,10 +96,10 @@ const DriveApplications = () => {
   };
 
   const toggleSelectAll = () => {
-    if (selectedAppIds.length === filteredApplications.length) {
+    if (selectedAppIds.length === applications.length) {
       setSelectedAppIds([]);
     } else {
-      setSelectedAppIds(filteredApplications.map(app => app._id));
+      setSelectedAppIds(applications.map(app => app._id));
     }
   };
 
@@ -91,15 +110,6 @@ const DriveApplications = () => {
       setSelectedAppIds([...selectedAppIds, appId]);
     }
   };
-
-  const filteredApplications = applications.filter(app => {
-    const matchesTab = activeTab === 'ALL' || app.status === activeTab;
-    const matchesSearch = 
-      (app.firstName + ' ' + app.lastName).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.rollNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
 
   const isDriveImmutable = ['CANCELLED', 'COMPLETED', 'DRAFT', 'PENDING_APPROVAL', 'REJECTED'].includes(driveStatus);
 
@@ -114,13 +124,11 @@ const DriveApplications = () => {
     }
   };
 
-  if (loading) return <div className="text-white p-8">Loading applications...</div>;
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6 animate-fadeIn w-full pb-8">
       
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-4">
           <button 
             onClick={() => navigate(`${basePath}/job-drives`)}
@@ -136,18 +144,21 @@ const DriveApplications = () => {
       </div>
 
       {/* Controls */}
-      <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 shrink-0">
         
         {/* Tabs */}
-        <div className="flex space-x-1 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div 
+          className="flex bg-[#0A192F] p-1 rounded-lg border border-gray-800 overflow-x-auto pb-2 xl:pb-0 w-full xl:w-auto flex-nowrap"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {['ALL', ...STATUSES].map(status => (
             <button
               key={status}
-              onClick={() => { setActiveTab(status); setSelectedAppIds([]); }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              onClick={() => { setActiveTab(status); setSelectedAppIds([]); setPage(1); }}
+              className={`px-4 py-2 rounded-md whitespace-nowrap text-sm font-medium transition-all ${
                 activeTab === status 
-                  ? 'bg-[var(--color-brand-primary)] text-[#001E2B]' 
-                  : 'text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-white'
+                  ? 'bg-[#00ED64] text-[#0A192F] font-bold' 
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               {status.replace('_', ' ')}
@@ -155,16 +166,34 @@ const DriveApplications = () => {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search by name, roll, email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#0A192F] border border-[var(--color-border)] text-white rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-[#00ED64]"
-          />
+        {/* Search & Sort */}
+        <div className="flex flex-col md:flex-row w-full xl:w-auto space-y-3 md:space-y-0 md:space-x-3">
+          <select
+            value={sortOption}
+            onChange={(e) => {
+              setSortOption(e.target.value);
+              setPage(1);
+            }}
+            className="bg-[#0A192F] border border-gray-700 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:border-[#00ED64]"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="cgpa_high">Highest CGPA</option>
+            <option value="cgpa_low">Lowest CGPA</option>
+            <option value="name_az">Name (A-Z)</option>
+            <option value="name_za">Name (Z-A)</option>
+          </select>
+
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search candidate..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+              className="w-full bg-[#0A192F] border border-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-[#00ED64] focus:ring-1 focus:ring-[#00ED64]"
+            />
+          </div>
         </div>
       </div>
 
@@ -202,39 +231,43 @@ const DriveApplications = () => {
       )}
 
       {/* Table */}
-      <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl overflow-visible">
-        <div className="overflow-visible w-full">
-          <table className="w-full text-left border-collapse">
+      <div className="relative bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl overflow-x-auto w-full">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-bg-primary)]/80 backdrop-blur-sm rounded-xl">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
+          </div>
+        )}
+        <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-black/20 text-[var(--color-text-secondary)] text-sm border-b border-[var(--color-border)]">
-                <th className="p-4 w-12">
+                <th className="px-4 py-3.5 w-12">
                   {!isDriveImmutable && (
                     <input 
                       type="checkbox" 
                       className="rounded border-gray-600 bg-[#0A192F] checked:bg-[#00ED64] cursor-pointer"
-                      checked={selectedAppIds.length === filteredApplications.length && filteredApplications.length > 0}
+                      checked={selectedAppIds.length === applications.length && applications.length > 0}
                       onChange={toggleSelectAll}
                     />
                   )}
                 </th>
-                <th className="p-4 font-medium">Candidate Info</th>
-                <th className="p-4 font-medium">Academics</th>
-                <th className="p-4 font-medium">Portfolio</th>
-                <th className="p-4 font-medium">Applied Date</th>
-                <th className="p-4 font-medium">Status</th>
+                <th className="px-4 py-3.5 font-medium">Candidate Info</th>
+                <th className="px-4 py-3.5 font-medium">Academics</th>
+                <th className="px-4 py-3.5 font-medium">Portfolio</th>
+                <th className="px-4 py-3.5 font-medium">Applied Date</th>
+                <th className="px-4 py-3.5 font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="text-white text-sm">
-              {filteredApplications.length === 0 ? (
+              {applications.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-gray-400">
                     No applications found.
                   </td>
                 </tr>
               ) : (
-                filteredApplications.map((app) => (
+                applications.map((app) => (
                   <tr key={app._id} className="border-b border-[var(--color-border)] hover:bg-white/5 transition-colors">
-                    <td className="p-4">
+                    <td className="px-4 py-3">
                       {!isDriveImmutable && (
                         <input 
                           type="checkbox" 
@@ -244,19 +277,19 @@ const DriveApplications = () => {
                         />
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3">
                       <div className="font-semibold text-white">{app.firstName} {app.lastName}</div>
-                      <div className="text-xs text-gray-400 mt-1">{app.rollNumber}</div>
-                      <div className="text-xs text-gray-500">{app.email}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{app.rollNumber}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-[180px]">{app.email}</div>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3">
                       <div className="text-gray-300">{app.branch || 'N/A'}</div>
-                      <div className="text-xs mt-1">
-                        <span className="text-[#00ED64] font-medium mr-3">CGPA: {app.cgpa}</span>
+                      <div className="text-xs mt-0.5">
+                        <span className="text-[#00ED64] font-medium mr-2">CGPA: {app.cgpa}</span>
                         <span className="text-red-400 font-medium">Backlogs: {app.activeBacklogs}</span>
                       </div>
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3">
                       <div className="flex items-center space-x-3 text-gray-400">
                         {app.resumeUrl ? (
                           <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#00ED64] transition-colors" title="View Resume">
@@ -283,7 +316,7 @@ const DriveApplications = () => {
                         ) : <Phone size={16} className="opacity-30" title="No Phone" />}
                       </div>
                       {app.skills && app.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2 max-w-[200px]">
+                        <div className="flex flex-wrap gap-1 mt-1.5 max-w-[200px]">
                           {app.skills.map((skill, i) => (
                             <span key={i} className="bg-blue-900/30 text-blue-400 border border-blue-800/50 px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
                               {skill}
@@ -292,10 +325,10 @@ const DriveApplications = () => {
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-gray-400">
+                    <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                       {new Date(app.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-3">
                       <div className="relative group/dropdown">
                         <div className="cursor-pointer">
                           {getStatusBadge(app.status)}
@@ -321,6 +354,56 @@ const DriveApplications = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+      {/* Pagination Footer */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#0A192F] p-4 rounded-lg border border-gray-800 w-full">
+        <div className="flex items-center text-sm text-gray-400">
+          <span>Show</span>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+            className="mx-2 bg-[#112240] border border-gray-700 rounded px-2 py-1 text-white focus:outline-none focus:border-[#00ED64]"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span>applications per page</span>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                page === 1
+                  ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                  : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${
+                page === totalPages || totalPages === 0
+                  ? "border-gray-700 text-gray-600 cursor-not-allowed"
+                  : "border-gray-600 text-gray-300 hover:text-white hover:border-[#00ED64]"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 
