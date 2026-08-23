@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const hrController = require("../controllers/hrController");
 const jobDriveController = require("../controllers/jobDriveController");
+const reportController = require("../controllers/reportController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // HR Registration /api/hr/register
@@ -15,6 +16,9 @@ router.put("/profile", hrController.updateHRProfile);
 
 // HR Dashboard
 router.get("/dashboard", hrController.getDashboardOverview);
+
+// HR Reports
+router.get("/reports/drives", reportController.getHRDriveStats);
 
 // HR Job Drives
 router.get("/job-drives", jobDriveController.getHRJobDrives);

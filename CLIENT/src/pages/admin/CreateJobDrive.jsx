@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Save, Users, Building2, BookOpen, Clock, Briefcase } from 'lucide-react';
 import api from '../../services/api';
@@ -15,6 +15,7 @@ const CreateJobDrive = () => {
   const [hrs, setHrs] = useState([]);
   const [uploadingJd, setUploadingJd] = useState(false);
   const [jdFile, setJdFile] = useState(null);
+  const submitStatusRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -113,12 +114,13 @@ const CreateJobDrive = () => {
     toast.success("Job Description PDF attached! It will be saved when you submit the form.");
   };
 
-  const handleSubmit = async (e, statusOverride = null) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
 
     try {
       let finalJdUrl = formData.jdFileUrl;
+      const statusOverride = submitStatusRef.current;
 
       if (jdFile) {
         setUploadingJd(true);
@@ -378,17 +380,17 @@ const CreateJobDrive = () => {
 
         {/* Submit */}
         <div className="flex justify-end space-x-4 pt-4">
-          <button type="button" onClick={(e) => handleSubmit(e, 'DRAFT')} disabled={loading} className="px-6 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-bold transition-all text-sm">
+          <button type="submit" onClick={() => submitStatusRef.current = 'DRAFT'} disabled={loading} className="px-6 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-bold transition-all text-sm">
             Save as Draft
           </button>
           
           {userRole === 'HR' ? (
-            <button type="button" onClick={(e) => handleSubmit(e, 'PENDING_APPROVAL')} disabled={loading} className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg text-sm disabled:opacity-50">
+            <button type="submit" onClick={() => submitStatusRef.current = 'PENDING_APPROVAL'} disabled={loading} className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg text-sm disabled:opacity-50">
               <Save size={18} />
               <span>Submit for Approval</span>
             </button>
           ) : (
-            <button type="button" onClick={(e) => handleSubmit(e, 'ACTIVE')} disabled={loading} className="flex items-center space-x-2 bg-[var(--color-brand-primary)] hover:bg-[#00c954] text-[var(--color-bg-primary)] font-bold py-3 px-8 rounded-xl transition-all shadow-lg text-sm disabled:opacity-50">
+            <button type="submit" onClick={() => submitStatusRef.current = 'ACTIVE'} disabled={loading} className="flex items-center space-x-2 bg-[var(--color-brand-primary)] hover:bg-[#00c954] text-[var(--color-bg-primary)] font-bold py-3 px-8 rounded-xl transition-all shadow-lg text-sm disabled:opacity-50">
               <Save size={18} />
               <span>{isEditing ? 'Save Changes' : 'Publish Job Drive'}</span>
             </button>

@@ -10,11 +10,14 @@ import {
   PieChart, Pie, Cell, Legend 
 } from 'recharts';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
+import { downloadJSONasCSV } from '../../utils/csvUtils';
 
 const SuperAdminOverview = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const getAuthHeader = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -37,6 +40,26 @@ const SuperAdminOverview = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  const handleDownloadReport = async (reportType) => {
+    try {
+      setDownloadingReport(true);
+      const res = await api.get(`/admin/reports/placement?reportType=${reportType}`, getAuthHeader());
+      if (res.data && res.data.data) {
+        if (res.data.data.length === 0) {
+          toast.error("No data available for this report.");
+          return;
+        }
+        downloadJSONasCSV(res.data.data, `${reportType}-report.csv`);
+        toast.success("Report downloaded successfully.");
+      }
+    } catch (error) {
+      console.error("Report Download Error:", error);
+      toast.error("Failed to download report.");
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -67,6 +90,36 @@ const SuperAdminOverview = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn w-full pb-10">
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0A192F] p-6 rounded-2xl border border-gray-800 shadow-md">
+        <div>
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">SuperAdmin Overview</h2>
+          <p className="text-sm text-gray-400 mt-1">Monitor system wide metrics and export global placement reports.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button 
+            onClick={() => handleDownloadReport('branch-stats')} 
+            disabled={downloadingReport}
+            className="px-4 py-2 bg-gray-900 hover:bg-emerald-500/10 border border-gray-700 hover:border-emerald-500/30 text-xs font-semibold text-gray-300 hover:text-emerald-400 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <BarChart2 size={16} /> Branch Stats CSV
+          </button>
+          <button 
+            onClick={() => handleDownloadReport('placed-students')} 
+            disabled={downloadingReport}
+            className="px-4 py-2 bg-gray-900 hover:bg-emerald-500/10 border border-gray-700 hover:border-emerald-500/30 text-xs font-semibold text-gray-300 hover:text-emerald-400 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <FileSpreadsheet size={16} /> Placed Students CSV
+          </button>
+          <button 
+            onClick={() => handleDownloadReport('unplaced-students')} 
+            disabled={downloadingReport}
+            className="px-4 py-2 bg-gray-900 hover:bg-yellow-500/10 border border-gray-700 hover:border-yellow-500/30 text-xs font-semibold text-gray-300 hover:text-yellow-400 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <FileSpreadsheet size={16} /> Unplaced Students CSV
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         

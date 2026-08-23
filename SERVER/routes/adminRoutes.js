@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const jobDriveController = require("../controllers/jobDriveController");
+const reportController = require("../controllers/reportController");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // Get Dashboard KPI Stats
@@ -10,6 +11,14 @@ router.get(
   protect,
   authorizeRoles("SUPERADMIN", "TPO", "ADMIN"),
   adminController.getDashboardStats
+);
+
+// Get Placement Reports (CSV Data)
+router.get(
+  "/reports/placement",
+  protect,
+  authorizeRoles("SUPERADMIN", "TPO", "ADMIN"),
+  reportController.getAdminPlacementStats
 );
 
 // Approve HRs and send email (SUPERADMIN, TPO)

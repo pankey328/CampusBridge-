@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { PieChart, Pie, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { downloadJSONasCSV } from '../../utils/csvUtils';
+import { FileSpreadsheet } from 'lucide-react';
 
 const HRDashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const HRDashboard = () => {
   });
   const [chartData, setChartData] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   const getAuthHeader = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -36,6 +39,26 @@ const HRDashboard = () => {
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadReport = async (reportType) => {
+    try {
+      setDownloadingReport(true);
+      const res = await api.get(`/hr/reports/drives?reportType=${reportType}`, getAuthHeader());
+      if (res.data && res.data.data) {
+        if (res.data.data.length === 0) {
+          toast.error("No data available for this report.");
+          return;
+        }
+        downloadJSONasCSV(res.data.data, `${reportType}-report.csv`);
+        toast.success("Report downloaded successfully.");
+      }
+    } catch (error) {
+      console.error("Report Download Error:", error);
+      toast.error("Failed to download report.");
+    } finally {
+      setDownloadingReport(false);
     }
   };
 
@@ -64,13 +87,29 @@ const HRDashboard = () => {
           <p className="text-[var(--color-text-secondary)]">Manage your company's campus recruitment drives.</p>
         </div>
         
-        <button 
-          onClick={() => navigate('/hr/job-drives/create')}
-          className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] text-[#001E2B] font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(0,237,100,0.2)] hover:shadow-[0_0_30px_rgba(0,237,100,0.4)] transition-all flex items-center shrink-0"
-        >
-          <Plus size={20} className="mr-2" />
-          Post New Job Drive
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={() => handleDownloadReport('applicants')} 
+            disabled={downloadingReport}
+            className="px-4 py-2.5 bg-[var(--color-bg-secondary)] hover:bg-blue-500/10 border border-[var(--color-border)] hover:border-blue-500/30 text-xs font-semibold text-[var(--color-text-primary)] hover:text-blue-400 rounded-xl transition-colors flex items-center gap-2"
+          >
+            <FileSpreadsheet size={16} /> All Applicants CSV
+          </button>
+          <button 
+            onClick={() => handleDownloadReport('hired')} 
+            disabled={downloadingReport}
+            className="px-4 py-2.5 bg-[var(--color-bg-secondary)] hover:bg-emerald-500/10 border border-[var(--color-border)] hover:border-emerald-500/30 text-xs font-semibold text-[var(--color-text-primary)] hover:text-emerald-400 rounded-xl transition-colors flex items-center gap-2"
+          >
+            <FileSpreadsheet size={16} /> Hired Candidates CSV
+          </button>
+          <button 
+            onClick={() => navigate('/hr/job-drives/create')}
+            className="bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] text-[#001E2B] font-bold py-2.5 px-6 rounded-xl shadow-[0_0_20px_rgba(0,237,100,0.2)] hover:shadow-[0_0_30px_rgba(0,237,100,0.4)] transition-all flex items-center shrink-0"
+          >
+            <Plus size={20} className="mr-2" />
+            Post New Job Drive
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
