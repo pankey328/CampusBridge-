@@ -6,9 +6,9 @@ const fileUpload = require("express-fileupload");
 
 const app = express();
 
-const url = process.env.MONGO_URI;
+const url = process.env.MONGO_URI || process.env.MONGODB_URI;
 const clientUrl = process.env.CLIENT_URL;
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 app.use(
   cors({
@@ -50,10 +50,6 @@ app.use("/api/upload", uploadRoutes);
 
 // AI Practice Routes
 const aiRoutes = require("./routes/aiRoutes");
-const mockRoutes = require("./routes/mockRoutes");
-const jobDriveRoutes = require("./routes/jobDriveRoutes");
-app.use("/api/mock", mockRoutes);
-app.use("/api/jobdrives", jobDriveRoutes);
 app.use("/api/ai", aiRoutes);
 
 // Fallback 404 handler
@@ -61,15 +57,19 @@ app.use((req, res) => {
   res.status(404).json({ message: "API route not found" });
 });
 
-mongoose
-  .connect(url)
-  .then(() => {
-    console.log(`DATABASE Connected`);
+if (!url) {
+  console.error("Database Error: MONGO_URI (or MONGODB_URI) is missing from environment variables!");
+} else {
+  mongoose
+    .connect(url)
+    .then(() => {
+      console.log(`DATABASE Connected`);
 
-    const { startEmailWorker } = require("./workers/emailQueueRunner");
-    startEmailWorker();
-  })
-  .catch((error) => console.log(`Database Error:`, error));
+      const { startEmailWorker } = require("./workers/emailQueueRunner");
+      startEmailWorker();
+    })
+    .catch((error) => console.log(`Database Error:`, error));
+}
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
