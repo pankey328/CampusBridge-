@@ -7,7 +7,6 @@ const fileUpload = require("express-fileupload");
 const app = express();
 
 const url = process.env.MONGO_URI;
-const clientUrl = process.env.CLIENT_URL;
 const port = process.env.PORT;
 
 app.use(
@@ -47,6 +46,13 @@ app.use("/api/interviews", interviewRoutes);
 // File Upload Routes (Cloudinary)
 const uploadRoutes = require("./routes/uploadRoutes");
 app.use("/api/upload", uploadRoutes);
+
+// Job Drives Routes
+const jobDriveRoutes = require("./routes/jobDriveRoutes");
+app.use("/api/jobdrives", jobDriveRoutes);
+// Mock Interview Routes
+const mockRoutes = require("./routes/mockRoutes");
+app.use("/api/mock", mockRoutes);
 
 // AI Practice Routes
 const aiRoutes = require("./routes/aiRoutes");
