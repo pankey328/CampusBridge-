@@ -364,26 +364,17 @@ const HRJobDrives = () => {
                         >
                           <Users size={16} />
                         </button>
-                        <button
-                          onClick={() =>
-                            navigate(`/hr/job-drives/edit/${drive._id}`)
-                          }
-                          disabled={[
-                            "ACTIVE",
-                            "COMPLETED",
-                            "CANCELLED",
-                          ].includes(drive.status)}
-                          className={`p-2 rounded transition-colors ${["ACTIVE", "COMPLETED", "CANCELLED"].includes(drive.status) ? "text-gray-600 cursor-not-allowed opacity-50" : "text-gray-400 hover:text-[#00ED64] hover:bg-[#00ED64]/10"}`}
-                          title={
-                            ["ACTIVE", "COMPLETED", "CANCELLED"].includes(
-                              drive.status,
-                            )
-                              ? "Cannot edit drive in this state"
-                              : "Edit Drive"
-                          }
-                        >
-                          <Edit2 size={16} />
-                        </button>
+                        {!['ACTIVE', 'APPROVED', 'COMPLETED', 'CANCELLED', 'REJECTED'].includes(drive.status) && (
+                          <button
+                            onClick={() =>
+                              navigate(`/hr/job-drives/edit/${drive._id}`)
+                            }
+                            className="p-2 rounded transition-colors text-gray-400 hover:text-[#00ED64] hover:bg-[#00ED64]/10"
+                            title="Edit Drive"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
