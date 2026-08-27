@@ -52,6 +52,14 @@ app.use("/api/upload", uploadRoutes);
 const aiRoutes = require("./routes/aiRoutes");
 app.use("/api/ai", aiRoutes);
 
+// Job Drives Routes
+const jobDriveRoutes = require("./routes/jobDriveRoutes");
+app.use("/api/jobdrives", jobDriveRoutes);
+
+// Mock Interview Routes
+const mockRoutes = require("./routes/mockRoutes");
+app.use("/api/mock", mockRoutes);
+
 // Fallback 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "API route not found" });
