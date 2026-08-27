@@ -116,9 +116,16 @@ const SetupPassword = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-[#001E2B] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+            className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-[#001E2B] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
-            {isLoading ? "Activating..." : "Activate Account"}
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-[#001E2B] border-t-transparent rounded-full animate-spin"></div>
+                <span>Activating...</span>
+              </div>
+            ) : (
+              "Activate Account"
+            )}
           </button>
         </form>
       </div>

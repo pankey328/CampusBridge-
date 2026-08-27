@@ -25,17 +25,33 @@ const AIPractice = () => {
   const [phase, setPhase] = useState('intro'); // intro, interviewing, complete
   const [loading, setLoading] = useState(false);
   
-  const [skills, setSkills] = useState([]);
-  const [branch, setBranch] = useState('');
   const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [evaluation, setEvaluation] = useState(null);
+  const [overallRating, setOverallRating] = useState(null);
 
-  const currentQuestion = questions[questionIndex] || '';
+  const [attemptId, setAttemptId] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedJobDriveId, setSelectedJobDriveId] = useState('');
+  const [jobDrives, setJobDrives] = useState([]);
+  const [mockAttempts, setMockAttempts] = useState([]);
 
   const [isMuted, setIsMuted] = useState(false);
+
+  const fetchMockAttempts = async () => {
+    try {
+      const res = await api.get('/mock/my-attempts', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setMockAttempts(res.data.attempts || []);
+    } catch (err) {
+      console.error("Failed to load mock attempts", err);
+    }
+  };
+
+  const currentQuestion = questions[questionIndex] || '';
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -73,6 +89,24 @@ const AIPractice = () => {
       window.speechSynthesis.cancel();
     };
   }, []);
+
+
+  useEffect(() => {
+  const fetchJobDrives = async () => {
+    try {
+      const res = await api.get('/jobdrives/active', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setJobDrives(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load job drives.');
+    }
+  };
+
+  fetchJobDrives();
+  fetchMockAttempts();
+}, []);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -134,7 +168,7 @@ const AIPractice = () => {
     }
   };
 
-  // Upload Audio for Groq Whisper Transcription
+  // Upload Audio for Transcription
   const uploadAudio = async (audioBlob) => {
     setIsTranscribing(true);
     const formData = new FormData();
@@ -163,29 +197,40 @@ const AIPractice = () => {
     }
   };
 
-  // Start the AI Mock Session
   const handleStartSession = async () => {
+    if (!selectedFile) {
+      toast.error('Please upload a PDF resume (max 5 MB).');
+      return;
+    }
+    if (!selectedJobDriveId) {
+      toast.error('Please select a job drive.');
+      return;
+    }
     setLoading(true);
     try {
-      const response = await api.post('/ai/start', {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setQuestions(response.data.questions);
+      const formData = new FormData();
+      formData.append('resumeFile', selectedFile);
+      formData.append('jobDriveId', selectedJobDriveId);
+        const response = await api.post('/mock/start', formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+      setAttemptId(response.data.attemptId);
+      setQuestions([response.data.question]);
       setQuestionIndex(0);
       setChatHistory([]);
       setAnswer('');
-      setSkills(response.data.skills);
-      setBranch(response.data.branch);
       setPhase('interviewing');
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to start AI practice session.");
+      toast.error(error.response?.data?.message || 'Failed to start mock interview.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Submit Answer & Fetch Next Question/Report
+
   const handleSubmitAnswer = async (e) => {
     e.preventDefault();
     if (!answer.trim()) return;
@@ -199,31 +244,33 @@ const AIPractice = () => {
     }
 
     const currentQ = questions[questionIndex];
-    const newHistory = [...chatHistory, { question: currentQ, answer: answer }];
+    const newHistory = [...chatHistory, { question: currentQ, answer }];
     setChatHistory(newHistory);
-
-    if (questionIndex < questions.length - 1) {
-      setQuestionIndex(prev => prev + 1);
-      setAnswer('');
-      toast.success("Answer saved locally. Loading next question...");
-      return;
-    }
 
     setLoading(true);
     try {
-      const response = await api.post('/ai/submit', {
-        chatHistory: newHistory
+      const response = await api.post('/mock/answer', {
+        attemptId,
+        answer,
       }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
-      setEvaluation(response.data.evaluation);
-      setChatHistory(response.data.chatHistory);
-      setPhase('complete');
-      toast.success("Interview completed! Generating scorecard...");
+      if (response.data.finished) {
+          setEvaluation(response.data.evaluation);
+          setOverallRating(response.data.overallRating);
+          toast.success(`Interview finished! Your rating: ${response.data.overallRating}/10`);
+          setPhase('complete');
+          fetchMockAttempts();
+        } else {
+        setQuestions(prev => [...prev, response.data.nextQuestion]);
+        setQuestionIndex(prev => prev + 1);
+        setAnswer('');
+        toast.success('Answer saved. Loading next question...');
+      }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to submit answers.");
+      toast.error(error.response?.data?.message || 'Failed to submit answer.');
     } finally {
       setLoading(false);
     }
@@ -271,62 +318,64 @@ const AIPractice = () => {
               {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
             <div className="bg-[#112240] border border-gray-800 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#00ED64]">
-              Question {questionIndex + 1} / 3
+              Question {questionIndex + 1} / {questions.length}
             </div>
           </div>
         )}
       </div>
 
-      {/* Phase 1: Intro Setup */}
-      {phase === 'intro' && (
-        <div className="bg-[#112240] rounded-2xl border border-gray-800 p-8 space-y-6">
-          <div className="flex flex-col items-center justify-center py-6 text-center max-w-md mx-auto space-y-4">
+    {/* Phase 1: Intro Setup */}
+    {phase === 'intro' && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        
+        {/* Left Card: Start Practice Session */}
+        <div className="bg-[#112240] rounded-2xl border border-gray-800 p-8 space-y-6 shadow-xl">
+          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-4">
             <div className="bg-[#00ED64]/10 p-5 rounded-full border border-[#00ED64]/20 text-[#00ED64]">
               <Code2 size={40} className="animate-pulse" />
             </div>
             <h2 className="text-xl font-bold text-white">Start personalized technical mock</h2>
             <p className="text-sm text-gray-400 leading-relaxed">
-              CampusBridge AI generates questions tailored to your branch core subjects and listed profile skills.
+              Upload your resume (PDF ≤ 5 MB) and select a job drive. The AI will generate questions tailored to your profile.
             </p>
-            {(branch || (skills && skills.length > 0)) && (
-              <div className="space-y-3 pt-2 w-full max-w-sm">
-                {branch && (
-                  <div className="text-xs font-semibold text-[#00ED64] bg-[#00ED64]/5 border border-[#00ED64]/10 py-2 px-3 rounded-xl">
-                    Focus Area: {branch} Core
-                  </div>
-                )}
-                {skills && skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {skills.map((skill, index) => (
-                      <span key={index} className="bg-[#0A192F] text-gray-300 border border-gray-800 px-2.5 py-1 rounded-lg text-[10px] font-medium">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-gray-800 pt-6 max-w-xl mx-auto space-y-6">
-            <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800 flex flex-col space-y-2">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Mock Guidelines</span>
-              <ul className="text-xs text-gray-400 space-y-2">
-                <li className="flex items-start gap-1.5">
-                  <span className="text-[#00ED64] mt-0.5">•</span>
-                  You will be asked 3 challenging, open-ended technical questions.
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-[#00ED64] mt-0.5">•</span>
-                  Speak your answers using high-accuracy AI speech-to-text.
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-[#00ED64] mt-0.5">•</span>
-                  Upon completion, the AI generates a scorecard including strengths, weaknesses, and a personalized topic study plan.
-                </li>
-              </ul>
+            {/* Resume Upload */}
+            <div className="w-full max-w-sm space-y-2 text-left">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Resume (PDF)
+              </label>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file && file.size > 5 * 1024 * 1024) {
+                    toast.error('File exceeds 5 MB limit.');
+                    e.target.value = '';
+                    return;
+                  }
+                  setSelectedFile(file);
+                }}
+                className="w-full p-2 bg-[#0A192F] border border-gray-700 rounded-lg text-gray-300 focus:outline-none"
+              />
             </div>
-
+            {/* Job Drive Select */}
+            <div className="w-full max-w-sm space-y-2 text-left">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Job Drive
+              </label>
+              <select
+                value={selectedJobDriveId}
+                onChange={(e) => setSelectedJobDriveId(e.target.value)}
+                className="w-full p-2 bg-[#0A192F] border border-gray-700 rounded-lg text-gray-300 focus:outline-none"
+              >
+                <option value="">-- Select a Job Drive --</option>
+                {jobDrives.map((jd) => (
+                  <option key={jd._id} value={jd._id}>
+                    {jd.title}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleStartSession}
               disabled={loading}
@@ -334,8 +383,8 @@ const AIPractice = () => {
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin"></div>
-                  <span>Generating Interview...</span>
+                  <div className="w-5 h-5 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin" />
+                  <span>Starting Mock...</span>
                 </>
               ) : (
                 <>
@@ -346,7 +395,57 @@ const AIPractice = () => {
             </button>
           </div>
         </div>
-      )}
+
+        {/* Right Card: Practice Attempts History */}
+        {(() => {
+          const ratedAttempts = mockAttempts.filter(a => typeof a.overallRating === 'number' && a.overallRating !== null);
+          const averageScore = ratedAttempts.length > 0 
+            ? (ratedAttempts.reduce((acc, curr) => acc + curr.overallRating, 0) / ratedAttempts.length).toFixed(1)
+            : '—';
+          
+          return (
+            <div className="bg-[#112240] rounded-2xl border border-gray-800 p-8 space-y-6 shadow-xl">
+              <h3 className="text-lg font-bold text-white flex items-center justify-between border-b border-gray-800/50 pb-3 flex-wrap gap-2">
+                <span>AI Mock Practice History</span>
+                <span className="text-xs text-[#00ED64] font-bold bg-[#00ED64]/10 border border-[#00ED64]/20 px-3 py-1 rounded-lg">
+                  Average Score: {averageScore}/10
+                </span>
+              </h3>
+              {mockAttempts && mockAttempts.length > 0 ? (
+                <div className="space-y-3 overflow-y-auto max-h-[360px] pr-2">
+                  {mockAttempts.map((attempt, index) => (
+                    <div key={index} className="bg-[#0A192F] p-4 rounded-xl border border-gray-800 space-y-2 hover:border-gray-700 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-xs font-bold text-gray-300">Attempt #{mockAttempts.length - index}</span>
+                          <span className="text-[10px] text-gray-500 block mt-0.5">
+                            {new Date(attempt.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        <span className="bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 px-2 py-0.5 rounded text-xs font-bold">
+                          Overall Score: {attempt.overallRating !== null && attempt.overallRating !== undefined ? `${attempt.overallRating}/10` : '—'}
+                        </span>
+                      </div>
+                      {attempt.jobDriveId && (
+                        <div className="text-xs text-gray-400 mt-2">
+                          <span className="text-gray-500 font-medium">Job Drive:</span> {attempt.jobDriveId.title}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 border border-dashed border-gray-800 rounded-xl">
+                  <HelpCircle className="text-gray-500 mx-auto mb-2" size={24} />
+                  <span className="text-gray-500 text-sm italic">No practice attempts recorded yet</span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+      </div>
+    )}
 
       {/* Phase 2: Active Interview */}
       {phase === 'interviewing' && (
@@ -480,7 +579,8 @@ const AIPractice = () => {
               <div className="inline-flex bg-[#00ED64]/10 text-[#00ED64] p-3 rounded-xl border border-[#00ED64]/20">
                 <Award size={24} />
               </div>
-              <h2 className="text-xl font-bold text-white">Performance Scorecard</h2>
+              <h2 className="text-xl font-bold text-white">Overall Rating: {overallRating !== null && overallRating !== undefined ? `${overallRating}/10` : 'N/A'}</h2>
+              <p className="text-sm text-gray-400">Your interview performance summary</p>
               <p className="text-sm text-gray-400 leading-relaxed max-w-xl">
                 Mock interview completed successfully. The AI recruiter has analyzed your answers against core criteria. Here is your evaluation.
               </p>
@@ -490,6 +590,52 @@ const AIPractice = () => {
             <div className="shrink-0 flex flex-col items-center justify-center p-6 bg-[#0A192F] rounded-2xl border border-gray-800/80 w-44 h-44 shadow-inner relative">
               <span className="text-4xl font-extrabold text-[#00ED64]">{evaluation.overallScore}%</span>
               <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-1">Overall Score</span>
+            </div>
+          </div>
+
+          {/* Per‑question review list */}
+          <div className="bg-[#112240] p-6 rounded-2xl border border-gray-800 space-y-6 shadow-xl">
+            <h3 className="font-bold text-white text-sm flex items-center gap-2 border-b border-gray-800/60 pb-3">
+              <Award size={16} className="text-[#00ED64]" />
+              Question-by-Question Review
+            </h3>
+            
+            <div className="space-y-6">
+              {evaluation && evaluation.perQuestion && evaluation.perQuestion.map((q, idx) => (
+                <div 
+                  key={idx} 
+                  className={`p-5 rounded-xl border border-gray-850 bg-[#0A192F]/50 space-y-3 relative overflow-hidden transition-all ${
+                    q.isFollowUp ? 'border-purple-500/20 shadow-purple-500/[0.02]' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        Question {idx + 1}
+                      </span>
+                      {q.isFollowUp && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                          Follow-up
+                        </span>
+                      )}
+                    </div>
+                    <span className="bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
+                      {q.aiRating !== undefined && q.aiRating !== null ? `${q.aiRating}/5` : '—'} Rating
+                    </span>
+                  </div>
+
+                  <div className="text-sm font-semibold text-white leading-relaxed">
+                    {q.question}
+                  </div>
+
+                  <div className="space-y-1.5 mt-2">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Your Answer</span>
+                    <div className="bg-[#0A192F] p-4 rounded-lg border border-gray-800 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {q.answer || <span className="italic text-gray-500">No answer provided</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

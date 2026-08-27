@@ -95,8 +95,17 @@ const ForgotPassword = () => {
               disabled={isLoading}
               className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-[var(--color-bg-dark)] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50"
             >
-              {isLoading ? "Sending..." : "Send OTP"}
-              {!isLoading && <ArrowRight className="ml-2 w-4 h-4" />}
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-[var(--color-bg-dark)] border-t-transparent rounded-full animate-spin"></div>
+                  <span>Sending...</span>
+                </div>
+              ) : (
+                <>
+                  <span>Send OTP</span>
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
         ) : (
@@ -166,9 +175,16 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={isLoading || newPassword !== confirmNewPassword}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-[var(--color-bg-dark)] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50"
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-[var(--color-bg-dark)] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50"
             >
-              {isLoading ? "Resetting..." : "Reset Password"}
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-[var(--color-bg-dark)] border-t-transparent rounded-full animate-spin"></div>
+                  <span>Resetting...</span>
+                </div>
+              ) : (
+                "Reset Password"
+              )}
             </button>
           </form>
         )}

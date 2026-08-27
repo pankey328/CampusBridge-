@@ -24,6 +24,7 @@ const HRManagement = () => {
   const [selectedHr, setSelectedHr] = useState(null);
   const [viewData, setViewData] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -68,14 +69,16 @@ const HRManagement = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await api.post('/admin/hr/manual', formData, getAuthHeader());
       setShowAddModal(false);
       setFormData({ companyName: '', email: '', designation: '', phone: '', linkedinUrl: '', industry: '', website: '', gstin: '' });
-
       fetchHRs();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add HR");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -93,19 +96,22 @@ const HRManagement = () => {
 
   const handleReject = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await api.put(`/admin/reject-hr/${selectedHrId}`, { reason: rejectReason }, getAuthHeader());
       setShowRejectModal(false);
       setRejectReason("");
-
       fetchHRs();
     } catch (error) {
       toast.error("Failed to reject HR");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await api.put(`/admin/hr/${selectedHr.id}`, formData, getAuthHeader());
       setShowEditModal(false);
@@ -113,6 +119,8 @@ const HRManagement = () => {
       toast.success("HR updated successfully");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update HR");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -249,13 +257,7 @@ const HRManagement = () => {
         </div>
       </div>
 
-      {/* Data Table */}
       <div className="relative rounded-lg border border-gray-800 overflow-x-auto w-full bg-[#0A192F]/50">
-        {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
-          </div>
-        )}
         <table className="w-full text-left text-sm text-gray-300">
           <thead className="text-xs uppercase bg-[#0A192F] text-gray-400">
             <tr>
@@ -267,7 +269,13 @@ const HRManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {hrs.length === 0 && !loading ? (
+            {loading ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-20 text-center">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#00ED64]"></div>
+                </td>
+              </tr>
+            ) : hrs.length === 0 ? (
               <tr>
                 <td colSpan="5" className="px-6 py-8 text-center text-gray-500">No HRs found.</td>
               </tr>
@@ -587,9 +595,22 @@ const HRManagement = () => {
                 <button type="button" onClick={() => { setShowAddModal(false); setShowEditModal(false); }} className="px-6 py-2 text-gray-400 hover:text-white transition-colors">
                   Cancel
                 </button>
-                <button type="submit" className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-6 rounded-lg transition-colors">
-                  <Save size={18} />
-                  <span>{showAddModal ? "Save & Send Setup Link" : "Save Changes"}</span>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin"></div>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      <span>{showAddModal ? "Save & Send Setup Link" : "Save Changes"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -618,8 +639,13 @@ const HRManagement = () => {
                   <button type="button" onClick={() => setShowRejectModal(false)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
                     Cancel
                   </button>
-                  <button type="submit" className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-                    Confirm Reject
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                    <span>Confirm Reject</span>
                   </button>
                 </div>
               </form>

@@ -50,6 +50,10 @@ app.use("/api/upload", uploadRoutes);
 
 // AI Practice Routes
 const aiRoutes = require("./routes/aiRoutes");
+const mockRoutes = require("./routes/mockRoutes");
+const jobDriveRoutes = require("./routes/jobDriveRoutes");
+app.use("/api/mock", mockRoutes);
+app.use("/api/jobdrives", jobDriveRoutes);
 app.use("/api/ai", aiRoutes);
 
 // Fallback 404 handler

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, Plus, Edit2, Lock, Unlock, Mail, Phone, Calendar, Eye, User as UserIcon, Search, Save, X } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
@@ -222,13 +222,7 @@ const TPOManagement = () => {
         </div>
       </div>
 
-      {/* Data Table */}
       <div className="relative rounded-lg border border-gray-800 overflow-x-auto w-full bg-[#0A192F]/50">
-        {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm rounded-lg min-h-[200px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
-          </div>
-        )}
         <table className="w-full text-left text-sm text-gray-300">
           <thead className="text-xs uppercase bg-[#0A192F] text-gray-400">
             <tr>
@@ -239,7 +233,13 @@ const TPOManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {!loading && tpos.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="4" className="px-6 py-20 text-center">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#00ED64]"></div>
+                </td>
+              </tr>
+            ) : tpos.length === 0 ? (
               <tr>
                 <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
                   <Shield className="w-12 h-12 mb-3 opacity-30 mx-auto" />
@@ -446,9 +446,16 @@ const TPOManagement = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold rounded-lg transition-colors disabled:opacity-50 flex items-center shadow-lg shadow-[#00ED64]/10"
+                  className="px-6 py-2.5 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 shadow-lg shadow-[#00ED64]/10 min-w-[150px]"
                 >
-                  {submitting ? 'Saving...' : 'Save TPO Officer'}
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin"></div>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save TPO Officer</span>
+                  )}
                 </button>
               </div>
             </form>

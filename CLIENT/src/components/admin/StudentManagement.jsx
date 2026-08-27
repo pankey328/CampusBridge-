@@ -20,6 +20,8 @@ const StudentManagement = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [viewData, setViewData] = useState(null);
+  const [mockAttempts, setMockAttempts] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -65,25 +67,30 @@ const StudentManagement = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await api.post('/admin/students/manual', formData, getAuthHeader());
       setShowAddModal(false);
       setFormData({ firstName: '', lastName: '', email: '', rollNumber: '', branch: '', passoutYear: new Date().getFullYear(), cgpa: 0, activeBacklogs: 0 });
-
       fetchStudents();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to add student");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await api.put(`/admin/students/${selectedStudent.id}`, formData, getAuthHeader());
       setShowEditModal(false);
       fetchStudents();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to update student");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -106,6 +113,16 @@ const StudentManagement = () => {
     try {
       const { data } = await api.get(`/admin/students/${id}`, getAuthHeader());
       setViewData(data.data);
+      
+      // Fetch mock attempts for student
+      try {
+        const attemptsRes = await api.get(`/mock/attempts/${id}`, getAuthHeader());
+        setMockAttempts(attemptsRes.data.attempts || []);
+      } catch (attemptsError) {
+        console.error("Failed to fetch mock attempts for student", attemptsError);
+        setMockAttempts([]);
+      }
+
       setShowViewModal(true);
     } catch (error) {
       alert("Failed to fetch student details");
@@ -230,13 +247,7 @@ const StudentManagement = () => {
         </div>
       </div>
 
-      {/* Data Table */}
       <div className="relative rounded-lg border border-gray-800 overflow-x-auto w-full bg-[#0A192F]/50">
-        {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0A192F]/80 backdrop-blur-sm rounded-lg min-h-[200px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00ED64]"></div>
-          </div>
-        )}
         <table className="w-full text-left text-sm text-gray-300">
           <thead className="text-xs uppercase bg-[#0A192F] text-gray-400">
             <tr>
@@ -249,7 +260,13 @@ const StudentManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {!loading && students.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-20 text-center">
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#00ED64]"></div>
+                </td>
+              </tr>
+            ) : students.length === 0 ? (
               <tr>
                 <td colSpan="6" className="px-6 py-8 text-center text-gray-500">No students found.</td>
               </tr>
@@ -419,9 +436,22 @@ const StudentManagement = () => {
                 <button type="button" onClick={() => { setShowAddModal(false); setShowEditModal(false); }} className="px-6 py-2 text-gray-400 hover:text-white transition-colors">
                   Cancel
                 </button>
-                <button type="submit" className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-6 rounded-lg transition-colors">
-                  <Save size={18} />
-                  <span>{showAddModal ? "Save & Send Email" : "Update Student"}</span>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex items-center space-x-2 bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px] justify-center"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-[#0A192F] border-t-transparent rounded-full animate-spin"></div>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      <span>{showAddModal ? "Save & Send Email" : "Update Student"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -579,6 +609,54 @@ const StudentManagement = () => {
                   </div>
 
                 </div>
+
+                {/* AI Practice Mock Attempts Card */}
+                {(() => {
+                  const ratedAttempts = mockAttempts.filter(a => typeof a.overallRating === 'number' && a.overallRating !== null);
+                  const averageScore = ratedAttempts.length > 0 
+                    ? (ratedAttempts.reduce((acc, curr) => acc + curr.overallRating, 0) / ratedAttempts.length).toFixed(1)
+                    : '—';
+                  
+                  return (
+                    <div className="bg-[#112240] border border-gray-800 p-6 rounded-xl shadow-sm md:col-span-2 space-y-4">
+                      <h4 className="text-white font-semibold flex items-center justify-between border-b border-gray-800/50 pb-3 flex-wrap gap-2">
+                        <span>AI Mock Practice History</span>
+                        <span className="text-xs text-[#00ED64] font-bold bg-[#00ED64]/10 border border-[#00ED64]/20 px-3 py-1 rounded-lg">
+                          Total Attempts: {mockAttempts.length} | Average Score: {averageScore}/10
+                        </span>
+                      </h4>
+                      {mockAttempts && mockAttempts.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {mockAttempts.map((attempt, index) => (
+                            <div key={index} className="bg-[#0A192F] p-4 rounded-xl border border-gray-800 space-y-2 hover:border-gray-700 transition-colors">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="text-xs font-bold text-gray-300">Attempt #{mockAttempts.length - index}</span>
+                                  <span className="text-[10px] text-gray-500 block mt-0.5">
+                                    {new Date(attempt.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
+                                <span className="bg-[#00ED64]/10 text-[#00ED64] border border-[#00ED64]/20 px-2 py-0.5 rounded text-xs font-bold">
+                                  Overall Score: {attempt.overallRating !== null && attempt.overallRating !== undefined ? `${attempt.overallRating}/10` : '—'}
+                                </span>
+                              </div>
+                              {attempt.jobDriveId && (
+                                <div className="text-xs text-gray-400 mt-2">
+                                  <span className="text-gray-500 font-medium">Job Drive:</span> {attempt.jobDriveId.title}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 border border-dashed border-gray-800 rounded-lg">
+                          <span className="text-gray-500 text-sm italic">No practice attempts recorded yet</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
               </div>
             </div>
           </div>

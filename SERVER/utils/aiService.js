@@ -1,4 +1,5 @@
 const axios = require("axios");
+const pdfParse = require("pdf-parse");
 
 // Call Groq API for Chat Completions
 const callGroq = async (prompt) => {
@@ -54,7 +55,7 @@ const callGroq = async (prompt) => {
 
 
 // Generate interview questions
-exports.generateQuestionsBatch = async (skills, branch, count = 3) => {
+const generateQuestionsBatch = async (skills, branch, count = 3) => {
   const prompt = `
 You are an expert technical interviewer hiring for entry-level engineering roles.
 The candidate has the following profile details:
@@ -113,7 +114,7 @@ Format:
 };
 
 // Evaluate interview transcript
-exports.evaluateInterview = async (skills, branch, chatHistory) => {
+const evaluateInterview = async (skills, branch, chatHistory) => {
   const historyText = chatHistory.map((h, i) => `Question ${i + 1}: ${h.question}\nCandidate Answer: ${h.answer}`).join("\n\n");
 
   const prompt = `
@@ -157,8 +158,9 @@ Double check that the JSON is fully valid and parseable.
   `;
 
   const reportText = await callGroq(prompt);
+  const cleanText = reportText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   
-  const jsonObjectMatch = reportText.match(/\{[\s\S]*\}/);
+  const jsonObjectMatch = cleanText.match(/\{[\s\S]*\}/);
   if (jsonObjectMatch) {
     try {
       return JSON.parse(jsonObjectMatch[0]);
@@ -178,8 +180,7 @@ Double check that the JSON is fully valid and parseable.
 };
 
 
-// Transcribes audio buffer using Groq Whisper API.
-exports.transcribeAudio = async (fileBuffer, mimeType) => {
+const transcribeAudio = async (fileBuffer, mimeType) => {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     throw new Error("GROQ_API_KEY is not defined in server environment configurations. Please add it to your .env file.");
@@ -217,3 +218,4 @@ exports.transcribeAudio = async (fileBuffer, mimeType) => {
     throw new Error(error.response?.data?.error?.message || error.message || "Failed to transcribe audio.");
   }
 };
+module.exports = { callGroq, generateQuestionsBatch, evaluateInterview, transcribeAudio };
