@@ -146,15 +146,18 @@ exports.getDashboardOverview = async (req, res) => {
       .populate('jobDriveId', 'title')
       .populate('studentId', 'email');
       
-    const studentIds = recentApplications.map(app => app.studentId._id);
+    const studentIds = recentApplications
+      .filter(app => app.studentId && app.studentId._id)
+      .map(app => app.studentId._id);
     const profiles = await StudentProfile.find({ userId: { $in: studentIds } });
 
     const recentActivity = recentApplications.map(app => {
-      const profile = profiles.find(p => p.userId.toString() === app.studentId._id.toString());
+      const studentIdStr = app.studentId?._id ? app.studentId._id.toString() : null;
+      const profile = studentIdStr ? profiles.find(p => p.userId.toString() === studentIdStr) : null;
       return {
         _id: app._id,
-        studentName: profile ? `${profile.firstName} ${profile.lastName}` : 'A Student',
-        jobTitle: app.jobDriveId.title,
+        studentName: profile ? `${profile.firstName} ${profile.lastName}`.trim() : (app.studentId?.email || 'A Student'),
+        jobTitle: app.jobDriveId?.title || 'Job Drive',
         status: app.status,
         timestamp: app.updatedAt
       };

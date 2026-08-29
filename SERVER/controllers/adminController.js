@@ -1106,7 +1106,7 @@ exports.getDashboardStats = async (req, res) => {
       completedDrives,
       totalApplications,
       hiredApplications,
-      recentDrives,
+      rawRecentDrives,
       recentLogs
     ] = await Promise.all([
       User.countDocuments({ role: "STUDENT" }),
@@ -1119,10 +1119,21 @@ exports.getDashboardStats = async (req, res) => {
       JobDrive.countDocuments({ status: "PENDING_APPROVAL" }),
       JobDrive.countDocuments({ status: "COMPLETED" }),
       Application.countDocuments(),
-      Application.countDocuments({ currentStatus: { $in: ["HIRED", "OFFERED", "ACCEPTED"] } }),
-      JobDrive.find().sort({ createdAt: -1 }).limit(5).select("title companyName packageLPA status deadline createdAt"),
+      Application.countDocuments({ status: "HIRED" }),
+      JobDrive.find().sort({ createdAt: -1 }).limit(5).populate("companyId", "name logoUrl").lean(),
       NotificationLog.find().sort({ createdAt: -1 }).limit(5).select("recipientEmail subject status createdAt")
     ]);
+
+    const recentDrives = rawRecentDrives.map(d => ({
+      _id: d._id,
+      title: d.title,
+      companyName: d.companyId?.name || "Company",
+      companyLogo: d.companyId?.logoUrl || "",
+      packageLPA: d.packageLPA,
+      status: d.status,
+      deadline: d.deadline,
+      createdAt: d.createdAt,
+    }));
 
     res.status(200).json({
       success: true,

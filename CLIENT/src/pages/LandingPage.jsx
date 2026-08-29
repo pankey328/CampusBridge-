@@ -1,249 +1,332 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Building2, 
-  Users, 
-  Shield, 
-  Briefcase, 
-  ArrowRight, 
-  CheckCircle2, 
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Users,
+  Shield,
+  Briefcase,
+  ArrowRight,
+  CheckCircle2,
   ExternalLink,
-  Laptop,
-  Mail,
   Video,
-  FileText
-} from 'lucide-react';
+  Sparkles,
+} from "lucide-react";
+import Logo from "./Logo";
 
 const LandingPage = () => {
   const navigate = useNavigate();
 
   const handleLoginRedirect = () => {
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleRegisterHRRedirect = () => {
-    navigate('/register-hr');
+    navigate("/register-hr");
   };
 
   return (
-    <div className="min-h-screen bg-[#0A192F] text-white font-sans relative overflow-hidden flex flex-col justify-between">
-      
-      {/* Background Accent Gradients */}
-      <div className="absolute w-[500px] h-[500px] bg-[#00ED64]/5 rounded-full mix-blend-screen filter blur-[150px] -top-52 -left-32 pointer-events-none"></div>
-      <div className="absolute w-[500px] h-[500px] bg-[#00ED64]/5 rounded-full mix-blend-screen filter blur-[150px] -bottom-52 -right-32 pointer-events-none"></div>
-
-      {/* Navigation Header */}
-      <header className="relative z-10 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between border-b border-gray-800/40">
-        <div className="flex items-center space-x-2">
-          <div className="w-9 h-9 rounded-lg bg-[#00ED64]/10 border border-[#00ED64]/20 flex items-center justify-center">
-            <Building2 className="text-[#00ED64] h-5 w-5" />
+    <div className="min-h-screen bg-[#F9F7F1] dark:bg-slate-900 text-[#121212] dark:text-gray-100 font-sans transition-colors duration-300 flex flex-col justify-between">
+      <div className="bg-[#B6F596] dark:bg-[#012a1d] rounded-bl-[100px] rounded-br-[20px] md:rounded-bl-[140px] md:rounded-br-[40px] relative overflow-hidden transition-colors duration-300">
+        {/* Navigation Header */}
+        <header className="relative z-10 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <Logo className="w-[150px] sm:w-[180px] h-auto text-[#034D35] dark:text-white transition-colors duration-300" />
           </div>
-          <span className="text-xl font-bold text-white tracking-wide">
-            Campus<span className="text-[#00ED64]">Bridge</span>
-          </span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={handleLoginRedirect}
-            className="text-gray-400 hover:text-white text-sm font-semibold transition-colors py-2 px-4"
-          >
-            Sign In
-          </button>
-          <button 
-            onClick={handleRegisterHRRedirect}
-            className="bg-[#00ED64]/10 hover:bg-[#00ED64]/20 text-[#00ED64] border border-[#00ED64]/30 font-semibold text-xs py-2 px-4 rounded-xl transition-all"
-          >
-            Register as Recruiter
-          </button>
-        </div>
-      </header>
 
-      {/* Hero Section */}
-      <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-6 flex flex-col justify-center py-16 md:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Column: CTA & Headline */}
+          <div className="flex items-center space-x-4 sm:space-x-5">
+            <button
+              onClick={handleLoginRedirect}
+              className="text-[#034D35] dark:text-gray-200 hover:opacity-70 text-sm font-bold transition-all underline-offset-4 hover:underline"
+            >
+              Log in
+            </button>
+            <button
+              onClick={handleRegisterHRRedirect}
+              className="bg-[#121212] hover:bg-black !text-white dark:bg-white dark:hover:bg-gray-200 dark:!text-slate-900 text-sm font-bold px-5 py-2.5 sm:px-6 rounded-full transition-all shadow-md flex items-center gap-1.5"
+            >
+              <span className="hidden sm:inline">Recruiter Portal</span>
+              <span className="sm:hidden">Recruiters</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Hero Banner Content */}
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 pt-12 pb-16 md:pt-16 md:pb-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Headline & CTAs */}
           <div className="lg:col-span-7 space-y-8">
-            <div className="inline-flex items-center gap-2 bg-[#00ED64]/10 border border-[#00ED64]/20 rounded-full px-4 py-1.5 text-xs text-[#00ED64] font-semibold animate-pulse">
-              <span className="w-1.5 h-1.5 bg-[#00ED64] rounded-full"></span>
-              Institutional Placement Automation
+            <div className="inline-flex items-center gap-2 bg-white/40 dark:bg-white/10 border border-[#034D35]/10 dark:border-white/10 rounded-full px-4 py-1.5 text-xs text-[#034D35] dark:text-[#9ad97a] font-bold uppercase tracking-wider">
+              <Sparkles size={14} />
+              <span>Placement Operating System</span>
             </div>
-            
-            <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">
-              Bridging Corporate Recruitment <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00ED64] to-[#00c954]">
-                With Student Potential.
-              </span>
+
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] text-[#034D35] dark:text-white">
+              Bridge Corporate Hiring with Student Potential.
             </h1>
-            
-            <p className="text-gray-400 text-lg leading-relaxed max-w-2xl">
-              CampusBridge is the institutional placement suite that automates recruitment drives. It streamlines student eligibility validation, automates recruiter communications, and facilitates online and offline interview management.
+
+            <p className="text-[#034D35]/80 dark:text-gray-300 text-lg sm:text-xl leading-relaxed max-w-xl font-medium">
+              Standardize institutional placement pipelines. Validate candidate
+              eligibility in real time, coordinate with recruiters seamlessly,
+              and conduct AI mock technical practices.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <button 
+              <button
                 onClick={handleLoginRedirect}
-                className="bg-[#00ED64] hover:bg-[#00c954] text-[#0A192F] font-bold py-3.5 px-8 rounded-xl transition-all shadow-lg shadow-[#00ED64]/10 flex items-center justify-center gap-2 group text-sm"
+                className="bg-[#121212] hover:bg-black !text-white dark:bg-[#B6F596] dark:hover:bg-[#9ad97a] dark:!text-[#034D35] font-bold py-4 px-8 rounded-full transition-all shadow-lg flex items-center justify-center gap-2 group text-base"
               >
-                <span>Enter Placement Portal</span>
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                <span>Access Portal</span>
+                <ArrowRight
+                  size={18}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
               </button>
-              
-              <button 
+
+              <button
                 onClick={handleRegisterHRRedirect}
-                className="bg-transparent hover:bg-gray-800/40 text-gray-300 border border-gray-700 hover:border-gray-600 font-semibold py-3.5 px-8 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+                className="bg-white hover:bg-gray-50 text-[#121212] dark:bg-transparent dark:hover:bg-white/5 dark:text-white border-2 border-transparent dark:border-white/20 font-bold py-4 px-8 rounded-full transition-all text-base flex items-center justify-center gap-2 shadow-sm"
               >
-                <span>Corporate Recruiting registration</span>
-                <ExternalLink size={14} />
+                <span>Partner with Us</span>
+                <ExternalLink size={16} />
               </button>
             </div>
           </div>
 
-          {/* Right Column: Mini Dashboard Visual Card */}
+          {/* Right Floating Visual Card */}
           <div className="lg:col-span-5 relative">
-            <div className="absolute inset-0 bg-[#00ED64]/10 rounded-3xl filter blur-3xl pointer-events-none opacity-40"></div>
-            
-            {/* Visual Glassmorphic Dashboard Preview */}
-            <div className="relative bg-[#112240] border border-gray-800 rounded-3xl p-6 shadow-2xl space-y-6">
-              
-              {/* Placement Stats Overview */}
-              <div className="flex items-center justify-between pb-4 border-b border-gray-800/60">
+            <div className="bg-white dark:bg-slate-800 rounded-[32px] p-8 shadow-2xl border border-gray-100 dark:border-slate-700 space-y-6 relative z-10">
+              <div className="flex items-center justify-between pb-5 border-b border-gray-100 dark:border-slate-700/80">
                 <div>
-                  <h3 className="font-bold text-white text-sm">Institutional Operations</h3>
-                  <p className="text-xs text-gray-500">Live Campus Drive Status</p>
+                  <h3 className="font-bold text-lg text-[#121212] dark:text-white">
+                    Live Pulse
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                    Campus Analytics
+                  </p>
                 </div>
-                <div className="bg-[#00ED64]/10 text-[#00ED64] text-xs font-semibold px-2.5 py-1 rounded-full border border-[#00ED64]/20">
-                  Active Ecosystem
-                </div>
+                <span className="bg-[#B6F596]/30 text-[#034D35] dark:bg-[#034D35]/50 dark:text-[#B6F596] text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                  Active
+                </span>
               </div>
 
-              {/* Stats Cards Grid */}
+              {/* Metrics Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800/80">
-                  <div className="flex items-center space-x-2 text-gray-400 text-xs mb-1">
-                    <Users size={14} className="text-[#00ED64]" />
-                    <span>Active Candidates</span>
+                <div className="bg-[#F9F7F1] dark:bg-slate-900/50 p-5 rounded-2xl border border-gray-100 dark:border-slate-700/50">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">
+                    <Users
+                      size={16}
+                      className="text-[#034D35] dark:text-[#B6F596]"
+                    />
+                    <span>Active Students</span>
                   </div>
-                  <div className="text-xl font-bold text-white">450+</div>
+                  <div className="text-3xl font-extrabold text-[#121212] dark:text-white">
+                    450+
+                  </div>
                 </div>
-                <div className="bg-[#0A192F] p-4 rounded-xl border border-gray-800/80">
-                  <div className="flex items-center space-x-2 text-gray-400 text-xs mb-1">
-                    <Briefcase size={14} className="text-[#00ED64]" />
-                    <span>Drives Managed</span>
+
+                <div className="bg-[#F9F7F1] dark:bg-slate-900/50 p-5 rounded-2xl border border-gray-100 dark:border-slate-700/50">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">
+                    <Briefcase
+                      size={16}
+                      className="text-[#034D35] dark:text-[#B6F596]"
+                    />
+                    <span>Hiring Drives</span>
                   </div>
-                  <div className="text-xl font-bold text-white">32</div>
+                  <div className="text-3xl font-extrabold text-[#121212] dark:text-white">
+                    32
+                  </div>
                 </div>
               </div>
 
-              {/* Status Feed Preview */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between bg-[#0A192F]/60 p-3 rounded-lg border border-gray-800/50">
-                  <div className="flex items-center space-x-2 min-w-0">
-                    <CheckCircle2 size={16} className="text-[#00ED64] shrink-0" />
-                    <span className="text-xs text-gray-300 truncate font-semibold">TPO Approved HR Account</span>
+              {/* Feed items */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-slate-700/30 border border-gray-100 dark:border-slate-700/50">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-[#B6F596]/40 text-[#034D35] dark:bg-[#034D35] dark:text-[#B6F596] flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <span className="text-sm font-bold text-[#121212] dark:text-white truncate">
+                      TPO Approved Corporate Drive
+                    </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 shrink-0 font-medium">Just now</span>
                 </div>
-                <div className="flex items-center justify-between bg-[#0A192F]/60 p-3 rounded-lg border border-gray-800/50">
-                  <div className="flex items-center space-x-2 min-w-0">
-                    <Video size={16} className="text-blue-400 shrink-0" />
-                    <span className="text-xs text-gray-300 truncate font-semibold">Online Interview Scheduled</span>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-slate-700/30 border border-gray-100 dark:border-slate-700/50">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <Video size={16} />
+                    </div>
+                    <span className="text-sm font-bold text-[#121212] dark:text-white truncate">
+                      Technical Interview Scheduled
+                    </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 shrink-0 font-medium">5m ago</span>
                 </div>
               </div>
             </div>
-          </div>
-
-        </div>
-
-        {/* Core Features Grid Section */}
-        <div className="mt-24 md:mt-32 space-y-12">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <h2 className="text-2xl md:text-3xl font-bold text-white">Platform Core Features</h2>
-            <p className="text-gray-400 text-sm">Integrated tools built specifically to automate institutional recruitment pipelines.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Recruiters */}
-            <div className="bg-[#112240] p-6 rounded-2xl border border-gray-800 hover:border-[#00ED64]/30 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="inline-flex bg-[#00ED64]/10 text-[#00ED64] p-3 rounded-xl border border-[#00ED64]/20">
-                  <Briefcase size={20} />
-                </div>
-                <h3 className="text-lg font-bold text-white">For Recruiter Partners (HR)</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  Post detailed job drives, filter applicants based on exact criteria, shortlist candidates instantly, and schedule either offline or online virtual interviews directly.
-                </p>
-              </div>
-              <ul className="space-y-2 text-xs text-gray-300 pt-2 border-t border-gray-800/40">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={12} className="text-[#00ED64]" /> Easy Drive Creation
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={12} className="text-[#00ED64]" /> Unified Application Tracking
-                </li>
-              </ul>
-            </div>
-
-            {/* Students */}
-            <div className="bg-[#112240] p-6 rounded-2xl border border-gray-800 hover:border-[#00ED64]/30 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="inline-flex bg-[#00ED64]/10 text-[#00ED64] p-3 rounded-xl border border-[#00ED64]/20">
-                  <Users size={20} />
-                </div>
-                <h3 className="text-lg font-bold text-white">For Students</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  Validate eligibility dynamically, upload resumes securely, submit applications in one click, and track upcoming slots and interviews in real-time.
-                </p>
-              </div>
-              <ul className="space-y-2 text-xs text-gray-300 pt-2 border-t border-gray-800/40">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={12} className="text-[#00ED64]" /> Automated Resume Hosting
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={12} className="text-[#00ED64]" /> One-Click Job Application
-                </li>
-              </ul>
-            </div>
-
-            {/* TPO Officers */}
-            <div className="bg-[#112240] p-6 rounded-2xl border border-gray-800 hover:border-[#00ED64]/30 transition-all flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="inline-flex bg-[#00ED64]/10 text-[#00ED64] p-3 rounded-xl border border-[#00ED64]/20">
-                  <Shield size={20} />
-                </div>
-                <h3 className="text-lg font-bold text-white">For Placement Officers (TPO)</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  Manage candidate databases, perform bulk student imports, review corporate partner requests, view automated system logs, and coordinate institutional placement events.
-                </p>
-              </div>
-              <ul className="space-y-2 text-xs text-gray-300 pt-2 border-t border-gray-800/40">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={12} className="text-[#00ED64]" /> Corporate Partner Approvals
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={12} className="text-[#00ED64]" /> Bulk Candidate Import
-                </li>
-              </ul>
-            </div>
-
           </div>
         </div>
+      </div>
 
+      {/* Main Core Features Section */}
+      <main className="max-w-7xl mx-auto w-full px-6 py-24">
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#121212] dark:text-white tracking-tight">
+            Designed for Every Stakeholder
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed font-medium">
+            Tailored dashboards and tools crafted to eliminate recruitment
+            friction for students, recruiters, and placement officers.
+          </p>
+        </div>
+
+        {/* Brevo Cards Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Card 1: Corporate Recruiters */}
+          <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-gray-200 dark:border-slate-700 p-8 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between space-y-8">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 rounded-2xl bg-[#034D35] text-[#B6F596] flex items-center justify-center">
+                  <Briefcase size={26} />
+                </div>
+                <span className="bg-[#F9F7F1] text-[#121212] dark:bg-slate-700 dark:text-gray-200 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide">
+                  Recruiters
+                </span>
+              </div>
+              <h3 className="text-2xl font-extrabold text-[#121212] dark:text-white">
+                Corporate Partners
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                Post detailed hiring drives, filter applicants by exact branch
+                and backlog limits, shortlist candidates in bulk, and dispatch
+                instant interview invites.
+              </p>
+            </div>
+
+            <ul className="space-y-3 text-sm text-[#121212] dark:text-gray-300 pt-6 border-t border-gray-100 dark:border-slate-700/80 font-medium">
+              <li className="flex items-center gap-3">
+                <CheckCircle2
+                  size={18}
+                  className="text-[#034D35] dark:text-[#B6F596]"
+                />{" "}
+                Single-click shortlisting
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2
+                  size={18}
+                  className="text-[#034D35] dark:text-[#B6F596]"
+                />{" "}
+                Video interview scheduling
+              </li>
+            </ul>
+          </div>
+
+          {/* Card 2: Students */}
+          <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-gray-200 dark:border-slate-700 p-8 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between space-y-8">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 rounded-2xl bg-[#B6F596] text-[#034D35] flex items-center justify-center">
+                  <Users size={26} />
+                </div>
+                <span className="bg-[#F9F7F1] text-[#121212] dark:bg-slate-700 dark:text-gray-200 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide">
+                  Students
+                </span>
+              </div>
+              <h3 className="text-2xl font-extrabold text-[#121212] dark:text-white">
+                Candidates
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                Check eligibility criteria automatically, apply to live campus
+                job drives in one click, host verifiable resumes, and practice
+                AI mock interviews.
+              </p>
+            </div>
+
+            <ul className="space-y-3 text-sm text-[#121212] dark:text-gray-300 pt-6 border-t border-gray-100 dark:border-slate-700/80 font-medium">
+              <li className="flex items-center gap-3">
+                <CheckCircle2
+                  size={18}
+                  className="text-[#034D35] dark:text-[#B6F596]"
+                />{" "}
+                Automated eligibility validation
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2
+                  size={18}
+                  className="text-[#034D35] dark:text-[#B6F596]"
+                />{" "}
+                AI Technical Mock Practice
+              </li>
+            </ul>
+          </div>
+
+          {/* Card 3: Placement Officers */}
+          <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-gray-200 dark:border-slate-700 p-8 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between space-y-8">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 rounded-2xl bg-[#034D35] text-[#B6F596] flex items-center justify-center">
+                  <Shield size={26} />
+                </div>
+                <span className="bg-[#F9F7F1] text-[#121212] dark:bg-slate-700 dark:text-gray-200 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide">
+                  Officers
+                </span>
+              </div>
+              <h3 className="text-2xl font-extrabold text-[#121212] dark:text-white">
+                Placement (TPO)
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                Bulk import student cohorts via CSV, review and authorize
+                recruiter partner profiles, track email logs, and oversee campus
+                placement statistics.
+              </p>
+            </div>
+
+            <ul className="space-y-3 text-sm text-[#121212] dark:text-gray-300 pt-6 border-t border-gray-100 dark:border-slate-700/80 font-medium">
+              <li className="flex items-center gap-3">
+                <CheckCircle2
+                  size={18}
+                  className="text-[#034D35] dark:text-[#B6F596]"
+                />{" "}
+                Bulk student cohort imports
+              </li>
+              <li className="flex items-center gap-3">
+                <CheckCircle2
+                  size={18}
+                  className="text-[#034D35] dark:text-[#B6F596]"
+                />{" "}
+                Corporate partner workflows
+              </li>
+            </ul>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 max-w-7xl mx-auto w-full px-6 py-6 mt-16 border-t border-gray-800/40 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
-        <span>© {new Date().getFullYear()} CampusBridge Platform. All rights reserved.</span>
-        <div className="flex items-center space-x-6">
-          <a href="#" className="hover:text-gray-450 transition-colors">Documentation</a>
-          <a href="#" className="hover:text-gray-450 transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-gray-450 transition-colors">Terms of Service</a>
+      <footer className="bg-white dark:bg-slate-950 mt-auto border-t border-gray-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto w-full px-6 py-10 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-500 dark:text-gray-400 font-medium gap-6">
+          <span>
+            © {new Date().getFullYear()} CampusBridge Enterprise. All rights
+            reserved.
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+            <button
+              onClick={handleLoginRedirect}
+              className="hover:text-[#121212] dark:hover:text-white transition-colors"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={handleRegisterHRRedirect}
+              className="hover:text-[#121212] dark:hover:text-white transition-colors"
+            >
+              Recruiter Registration
+            </button>
+            <a
+              href="#"
+              className="hover:text-[#121212] dark:hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </a>
+          </div>
         </div>
       </footer>
-
     </div>
   );
 };

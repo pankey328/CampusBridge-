@@ -173,8 +173,6 @@ router.put(
   adminController.toggleStudentLock
 );
 
-module.exports = router;
-
 // Job Drive Routes
 router.post(
   "/job-drives",

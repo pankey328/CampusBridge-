@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Login from "./pages/Login";
 import RegisterHR from "./pages/RegisterHR";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -35,7 +40,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 function App() {
   return (
     <Router>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-[#F9F7F1] dark:bg-slate-950 text-[#121212] dark:text-white font-sans transition-colors duration-300">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
@@ -43,20 +48,29 @@ function App() {
           <Route path="/register-hr" element={<RegisterHR />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/setup-password" element={<SetupPassword />} />
-          <Route path="/force-password-change" element={<ForcePasswordChange />} />
+          <Route
+            path="/force-password-change"
+            element={<ForcePasswordChange />}
+          />
 
           {/* SuperAdmin */}
-          <Route element={<ProtectedRoute allowedRoles={['SUPERADMIN']} />}>
+          <Route element={<ProtectedRoute allowedRoles={["SUPERADMIN"]} />}>
             <Route path="/superadmin" element={<AdminLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<SuperAdminOverview />} />
               <Route path="students" element={<StudentManagement />} />
-              <Route path="students/bulk-import" element={<BulkImportStudents />} />
+              <Route
+                path="students/bulk-import"
+                element={<BulkImportStudents />}
+              />
               <Route path="hr" element={<HRManagement />} />
               <Route path="job-drives" element={<JobDrives />} />
               <Route path="job-drives/create" element={<CreateJobDrive />} />
               <Route path="job-drives/edit/:id" element={<CreateJobDrive />} />
-              <Route path="job-drives/:id/applications" element={<DriveApplications />} />
+              <Route
+                path="job-drives/:id/applications"
+                element={<DriveApplications />}
+              />
               <Route path="tpos" element={<TPOManagement />} />
               <Route path="notifications" element={<NotificationLogs />} />
               <Route path="settings" element={<Settings />} />
@@ -64,26 +78,37 @@ function App() {
           </Route>
 
           {/* TPO Placement Officer */}
-          <Route element={<ProtectedRoute allowedRoles={['TPO', 'SUPERADMIN']} />}>
+          <Route
+            element={<ProtectedRoute allowedRoles={["TPO", "SUPERADMIN"]} />}
+          >
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<TPOOverview />} />
               <Route path="students" element={<StudentManagement />} />
-              <Route path="students/bulk-import" element={<BulkImportStudents />} />
+              <Route
+                path="students/bulk-import"
+                element={<BulkImportStudents />}
+              />
               <Route path="hr" element={<HRManagement />} />
               <Route path="job-drives" element={<JobDrives />} />
               <Route path="job-drives/create" element={<CreateJobDrive />} />
               <Route path="job-drives/edit/:id" element={<CreateJobDrive />} />
-              <Route path="job-drives/:id/applications" element={<DriveApplications />} />
+              <Route
+                path="job-drives/:id/applications"
+                element={<DriveApplications />}
+              />
               <Route path="notifications" element={<NotificationLogs />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Route>
 
-          <Route path="/tpo/*" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route
+            path="/tpo/*"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
 
           {/* Student */}
-          <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
+          <Route element={<ProtectedRoute allowedRoles={["STUDENT"]} />}>
             <Route path="/student" element={<StudentLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<StudentDashboard />} />
@@ -96,14 +121,17 @@ function App() {
           </Route>
 
           {/* HR Protected Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['HR']} />}>
+          <Route element={<ProtectedRoute allowedRoles={["HR"]} />}>
             <Route path="/hr" element={<HRLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<HRDashboard />} />
               <Route path="job-drives" element={<HRJobDrives />} />
               <Route path="job-drives/create" element={<CreateJobDrive />} />
               <Route path="job-drives/edit/:id" element={<CreateJobDrive />} />
-              <Route path="job-drives/:id/applications" element={<DriveApplications />} />
+              <Route
+                path="job-drives/:id/applications"
+                element={<DriveApplications />}
+              />
               <Route path="profile" element={<HRProfile />} />
               <Route path="settings" element={<Settings />} />
             </Route>

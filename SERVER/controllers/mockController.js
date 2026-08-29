@@ -191,17 +191,25 @@ exports.getStats = async (req, res) => {
         }
       },
       { $lookup: {
-          from: 'students',
+          from: 'studentprofiles',
           localField: '_id',
-          foreignField: '_id',
+          foreignField: 'userId',
           as: 'student'
         }
       },
-      { $unwind: '$student' },
+      { $unwind: { path: '$student', preserveNullAndEmptyArrays: true } },
       { $project: {
           studentId: '$_id',
-          name: { $concat: ['$student.firstName', ' ', '$student.lastName'] },
-          averageRating: 1,
+          name: {
+            $cond: {
+              if: '$student',
+              then: { $concat: ['$student.firstName', ' ', '$student.lastName'] },
+              else: 'Unknown Student'
+            }
+          },
+          rollNumber: '$student.rollNumber',
+          branch: '$student.branch',
+          averageRating: { $round: ['$averageRating', 1] },
           attemptCount: 1
         }
       }
@@ -218,7 +226,9 @@ exports.getDetails = async (req, res) => {
   try {
     const { studentId } = req.params;
     const docs = await MockAttempt.find({ studentId }).populate('attempts.jobDriveId', 'title description');
-    if (!docs || docs.length === 0) return res.status(404).json({ message: 'No attempts found for this student.' });
+    if (!docs || docs.length === 0) {
+      return res.status(200).json({ attempts: [] });
+    }
     
     let attempts = [];
     docs.forEach(doc => {

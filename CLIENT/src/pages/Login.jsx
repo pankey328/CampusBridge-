@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { loginUser } from "../redux/authSlice";
-import { LogIn, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Sparkles, CheckCircle2 } from "lucide-react";
+import Logo from "./Logo";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -17,7 +19,6 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      // Dispatch the Async Thunk
       const resultAction = await dispatch(
         loginUser({ email, password }),
       ).unwrap();
@@ -26,7 +27,9 @@ const Login = () => {
         toast("Please change your temporary password to continue.", {
           icon: "⚠️",
         });
-        navigate("/force-password-change", { state: { token: resultAction.token } });
+        navigate("/force-password-change", {
+          state: { token: resultAction.token },
+        });
         return;
       }
 
@@ -44,81 +47,163 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--color-bg-primary)] transition-colors duration-300">
-      <div className="w-full max-w-md glass-panel rounded-2xl p-8 shadow-2xl transition-all duration-300">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-bg-input)] mb-4 border border-[var(--color-border)] shadow-sm">
-            <LogIn className="w-8 h-8 text-[var(--color-brand-primary)]" />
-          </div>
-          <h2 className="text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">
-            CampusBridge
-          </h2>
-          <p className="text-[var(--color-text-secondary)] mt-2">
-            Enterprise Placement Portal
-          </p>
-        </div>
+    <div className="min-h-screen lg:h-screen flex bg-white dark:bg-slate-900 transition-colors duration-300">
+      <div className="hidden lg:flex lg:w-1/2 bg-[#B6F596] dark:bg-[#012a1d] relative items-center justify-center p-8 xl:p-12 overflow-hidden h-full">
+        <svg
+          className="absolute inset-0 w-full h-full text-[#034D35]/10 dark:text-[#B6F596]/10"
+          fill="none"
+        >
+          <path
+            d="M 0 500 C 300 500, 300 200, 600 200"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="M -100 600 C 400 600, 400 300, 800 300"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+        </svg>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-[var(--color-text-secondary)]" />
-              </div>
+        <div className="relative z-10 max-w-lg space-y-6">
+          <div className="inline-flex items-center gap-2 bg-white/40 dark:bg-white/10 border border-[#034D35]/10 dark:border-white/10 rounded-full px-4 py-1.5 text-xs text-[#034D35] dark:text-[#9ad97a] font-bold uppercase tracking-wider">
+            <Sparkles size={16} />
+            <span>Platform Access</span>
+          </div>
+
+          <h1 className="text-3xl xl:text-4xl font-extrabold text-[#034D35] dark:text-white tracking-tight leading-tight">
+            The Campus Placement Operating System.
+          </h1>
+
+          <p className="text-[#034D35]/80 dark:text-gray-300 text-base font-medium leading-relaxed">
+            Bridging corporate hiring with student potential. Access your
+            tailored dashboard to manage drives, applications, and recruitment
+            workflows seamlessly.
+          </p>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-3">
+              <CheckCircle2
+                size={18}
+                className="text-[#034D35] dark:text-[#B6F596]"
+              />
+              <span className="text-sm font-semibold text-[#034D35] dark:text-gray-200">
+                Real-time campus analytics
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle2
+                size={18}
+                className="text-[#034D35] dark:text-[#B6F596]"
+              />
+              <span className="text-sm font-semibold text-[#034D35] dark:text-gray-200">
+                Automated eligibility validation
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <CheckCircle2
+                size={18}
+                className="text-[#034D35] dark:text-[#B6F596]"
+              />
+              <span className="text-sm font-semibold text-[#034D35] dark:text-gray-200">
+                Seamless interview scheduling
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16 h-full overflow-y-auto custom-scrollbar">
+        <div className="w-full max-w-[440px]">
+          <div className="mb-8">
+            <Logo className="w-[180px] sm:w-[200px] h-auto text-[#049669] dark:text-white transition-colors duration-300" />
+          </div>
+
+          <h2 className="text-3xl font-bold text-[#121212] dark:text-white mb-2">
+            Log In
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-8 font-medium">
+            Access your CampusBridge dashboard.
+          </p>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-bold text-[#121212] dark:text-gray-200 mb-1.5">
+                Email address <span className="text-red-500">*</span>
+              </label>
               <input
                 type="email"
                 required
-                className="block w-full pl-10 pr-3 py-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent transition-all shadow-sm"
-                placeholder="director@campusbridge.edu"
+                className="block w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-[#121212] dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600 dark:focus:ring-indigo-500 transition-all shadow-sm"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)]">
-                Password
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-bold text-[#121212] dark:text-gray-200 mb-1.5">
+                Password <span className="text-red-500">*</span>
               </label>
-              <Link to="/forgot-password" className="text-sm font-medium text-[var(--color-brand-primary)] hover:text-[var(--color-brand-primary-hover)] transition-colors">
-                Forgot password?
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="block w-full pl-4 pr-12 py-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-[#121212] dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600 dark:focus:ring-indigo-500 transition-all shadow-sm"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center items-center py-3.5 px-4 rounded-full text-base font-bold !text-white bg-[#121212] hover:bg-black dark:bg-[#B6F596] dark:hover:bg-[#9ad97a] dark:!text-[#034D35] focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-md"
+            >
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white dark:border-[#034D35] border-t-transparent rounded-full animate-spin"></div>
+                  <span>Logging in...</span>
+                </div>
+              ) : (
+                "Log In"
+              )}
+            </button>
+          </form>
+
+          {/* Bottom Links */}
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-800 flex flex-col space-y-3 sm:space-y-0 sm:flex-row items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">
+              Corporate HR?{" "}
+              <Link
+                to="/register-hr"
+                className="text-[#121212] dark:text-white font-semibold underline underline-offset-4 hover:text-indigo-600 transition-colors"
+              >
+                Register here
               </Link>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-[var(--color-text-secondary)]" />
-              </div>
-              <input
-                type="password"
-                required
-                className="block w-full pl-10 pr-3 py-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] focus:border-transparent transition-all shadow-sm"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            </span>
+            <Link
+              to="/forgot-password"
+              className="text-gray-600 dark:text-gray-400 font-semibold underline underline-offset-4 hover:text-[#121212] dark:hover:text-white transition-colors"
+            >
+              I forgot my password
+            </Link>
           </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-[#001E2B] bg-[var(--color-brand-primary)] hover:bg-[var(--color-brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-brand-primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-          >
-            {isLoading ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-[#001E2B] border-t-transparent rounded-full animate-spin"></div>
-                <span>Authenticating...</span>
-              </div>
-            ) : (
-              "Sign In"
-            )}
-          </button>
-        </form>
-
-
+        </div>
       </div>
     </div>
   );
