@@ -55,7 +55,6 @@ exports.bulkScheduleInterviews = async (req, res) => {
         let currentSlot = await InterviewSlot.findOne({ jobDriveId: id, studentId: studentId }).session(session);
 
         if (currentSlot) {
-          currentSlot.panelistId = req.user.id;
           currentSlot.mode = mode;
           currentSlot.venueBuilding = venueBuilding;
           currentSlot.venueRoom = venueRoom;
@@ -70,7 +69,6 @@ exports.bulkScheduleInterviews = async (req, res) => {
           currentSlot = new InterviewSlot({
             jobDriveId: id,
             studentId: studentId,
-            panelistId: req.user.id,
             mode,
             venueBuilding,
             venueRoom,

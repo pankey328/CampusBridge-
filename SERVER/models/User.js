@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["SUPERADMIN", "TPO", "HR", "STUDENT", "PANELIST"],
+      enum: ["SUPERADMIN", "TPO", "HR", "STUDENT"],
       required: true,
     },
     isApproved: {

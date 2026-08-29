@@ -12,11 +12,6 @@ const interviewSlotSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    panelistId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     mode: {
       type: String,
       enum: ["ON_CAMPUS", "ONLINE"],
