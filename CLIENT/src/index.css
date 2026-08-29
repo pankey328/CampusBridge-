@@ -72,3 +72,17 @@ body {
 body, aside, main, header, div, section, p, span, h1, h2, h3, h4, h5, h6, button, input {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
+
+/* CampusBridge Custom Toast Notification Theme */
+.campus-toast {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.05) !important;
+  font-family: var(--font-sans) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dark .campus-toast {
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3) !important;
+}

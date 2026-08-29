@@ -11,11 +11,28 @@ createRoot(document.getElementById("root")).render(
     <Provider store={store}>
       <Toaster
         position="top-right"
+        gutter={10}
         toastOptions={{
+          duration: 3500,
+          className: "campus-toast",
           style: {
-            background: "#112240",
-            color: "#CCD6F6",
-            border: "1px solid #00ED64",
+            borderRadius: "20px",
+            fontSize: "13.5px",
+            fontWeight: "600",
+            padding: "12px 18px",
+          },
+          success: {
+            iconTheme: {
+              primary: "#049669",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            duration: 4500,
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#ffffff",
+            },
           },
         }}
       />
