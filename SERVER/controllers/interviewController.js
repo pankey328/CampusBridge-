@@ -104,16 +104,77 @@ exports.bulkScheduleInterviews = async (req, res) => {
           const formattedTime = currentSlot.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
           const content = `
-            <p>Congratulations!</p>
-            <p>Your interview for the <b>${drive.title}</b> role at <b>${drive.companyId ? drive.companyId.name : 'the company'}</b> has been scheduled.</p>
-            <ul>
-              <li><b>Date:</b> ${formattedDate}</li>
-              <li><b>Time:</b> ${formattedTime}</li>
-              <li><b>Duration:</b> ${durationMinutes} minutes</li>
-              <li><b>Mode:</b> ${mode}</li>
-              <li>${venueDetails}</li>
-            </ul>
-            <p>Please ensure you are ready 5 minutes before the scheduled time. Best of luck!</p>
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                      <tr>
+                        <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td>
+                                <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                              </td>
+                              <td align="right">
+                                <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Interview Slot</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 32px 32px 28px 32px;">
+                          <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Interview Scheduled!</h2>
+                          <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                            Congratulations! Your interview for the <strong>${drive.title}</strong> role at <strong>${drive.companyId ? drive.companyId.name : 'the company'}</strong> has been scheduled.
+                          </p>
+                          <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="padding: 5px 0; font-size: 14px; color: #64748B; width: 35%;">Date:</td>
+                                <td style="padding: 5px 0; font-size: 14px; font-weight: 700; color: #0F172A;">${formattedDate}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 5px 0; font-size: 14px; color: #64748B;">Time:</td>
+                                <td style="padding: 5px 0; font-size: 14px; font-weight: 700; color: #0F172A;">${formattedTime}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 5px 0; font-size: 14px; color: #64748B;">Duration:</td>
+                                <td style="padding: 5px 0; font-size: 14px; font-weight: 600; color: #0F172A;">${durationMinutes} mins</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 5px 0; font-size: 14px; color: #64748B;">Mode:</td>
+                                <td style="padding: 5px 0; font-size: 14px; font-weight: 700; color: #049669;">${mode}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 5px 0; font-size: 14px; color: #64748B;">Venue / Link:</td>
+                                <td style="padding: 5px 0; font-size: 14px; color: #0F172A;">${venueDetails}</td>
+                              </tr>
+                            </table>
+                          </div>
+                          <p style="margin: 0; font-size: 13px; color: #6B7280;">
+                            Please ensure you are ready 5 minutes before your scheduled time. Best of luck!
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                            CampusBridge &bull; Placement Operating System<br>
+                            Bridging corporate hiring with student potential.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
           `;
 
           const log = new NotificationLog({

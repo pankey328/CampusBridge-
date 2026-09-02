@@ -163,15 +163,63 @@ exports.approveHR = async (req, res) => {
       );
     }
 
-    const activationLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${hrUser._id}`;
+    const activationLink = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/setup-password?token=${rawToken}&id=${hrUser._id}`;
     
     const { sendMail } = require("../utils/emailUtils");
     const approveHtml = `
-      <h2>Welcome to CampusBridge!</h2>
-      <p>Your HR Account has been approved.</p>
-      <p>Please click the link below to set up your password and activate your account:</p>
-      <a href="${activationLink}" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Activate Account</a>
-      <p>This link will expire in 24 hours.</p>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Corporate Partner</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Welcome to CampusBridge!</h2>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      Your HR account representing your company has been approved by the Placement Cell.
+                    </p>
+                    <p style="margin: 0 0 24px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      Please click the link below to set up your secure password and activate your recruiter account:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${activationLink}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Activate Account &rarr;</a>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+                      This activation link will expire in 24 hours.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
     const subject = "Your CampusBridge HR Account is Approved!";
     const log = new NotificationLog({
@@ -225,11 +273,57 @@ exports.rejectHR = async (req, res) => {
 
     const { sendMail } = require("../utils/emailUtils");
     const rejectHtml = `
-      <h2>CampusBridge Registration Update</h2>
-      <p>Unfortunately, your registration to join CampusBridge as a Corporate Partner was not approved by the placement cell.</p>
-      <h3>Reason:</h3>
-      <p style="background: #f4f4f4; padding: 10px; border-left: 4px solid #ef4444;">${reason}</p>
-      <p>If you believe this was a mistake, please correct the issues and re-register.</p>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Registration Update</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Registration Status Update</h2>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      Unfortunately, your registration to join CampusBridge as a Corporate Partner was not approved by the placement cell.
+                    </p>
+                    <div style="background-color: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 8px; padding: 14px 18px; margin: 20px 0;">
+                      <div style="font-size: 12px; font-weight: 700; color: #991B1B; text-transform: uppercase; margin-bottom: 4px;">Reason:</div>
+                      <div style="font-size: 14px; color: #7F1D1D;">${reason}</div>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #6B7280; line-height: 1.5;">
+                      If you believe this was a mistake, please correct the issues and re-register or contact the campus placement cell.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
     await sendMail(hrUser.email, "Update on your CampusBridge Registration", rejectHtml);
 
@@ -412,13 +506,63 @@ exports.bulkImportCommit = async (req, res) => {
         });
         await newProfile.save({ session });
 
+        const loginUrl = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/login`;
         const emailHtml = `
-          <h2>Welcome to CampusBridge!</h2>
-          <p>Hello ${student.firstName},</p>
-          <p>Your placement cell has created an account for you.</p>
-          <p><strong>Your Temporary Password:</strong> <span style="background:#f4f4f4;padding:4px 8px;letter-spacing:1px;">${tempPassword}</span></p>
-          <p>Please log in immediately and change your password.</p>
-          <a href="${process.env.CLIENT_URL}/login" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Log In Now</a>
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <tr>
+                      <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td>
+                              <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                            </td>
+                            <td align="right">
+                              <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Student Portal</span>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 32px 32px 28px 32px;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Welcome to CampusBridge!</h2>
+                        <p style="margin: 0 0 14px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">Hello ${student.firstName},</p>
+                        <p style="margin: 0 0 20px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                          Your placement cell has created an account for you. Use your temporary password below to sign in:
+                        </p>
+                        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin: 20px 0; text-align: center;">
+                          <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px;">Temporary Password</div>
+                          <span style="background-color: #FFFFFF; border: 1px solid #CBD5E1; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #049669;">${tempPassword}</span>
+                        </div>
+                        <p style="margin: 0 0 24px 0; font-size: 14px; color: #4B5563; text-align: center;">
+                          Please log in immediately and change your password.
+                        </p>
+                        <div style="text-align: center; margin: 24px 0;">
+                          <a href="${loginUrl}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Log In Now &rarr;</a>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                          CampusBridge &bull; Placement Operating System<br>
+                          Bridging corporate hiring with student potential.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
         `;
 
         notificationLogs.push({
@@ -512,15 +656,63 @@ exports.addHRManually = async (req, res) => {
       await existingCompany.save();
     }
 
-    const activationLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${newUser._id}`;
+    const activationLink = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/setup-password?token=${rawToken}&id=${newUser._id}`;
     
     const { sendMail } = require("../utils/emailUtils");
     const approveHtml = `
-      <h2>Welcome to CampusBridge!</h2>
-      <p>An administrative account has been created for you representing ${companyName}.</p>
-      <p>Please click the link below to set up your password and activate your account:</p>
-      <a href="${activationLink}" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Activate Account</a>
-      <p>This link will expire in 24 hours.</p>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Corporate Partner</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Welcome to CampusBridge!</h2>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      An administrative account has been created for you representing <strong>${companyName}</strong>.
+                    </p>
+                    <p style="margin: 0 0 24px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      Please click the link below to set up your password and activate your account:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${activationLink}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Activate Account &rarr;</a>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+                      This link will expire in 24 hours.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
     await sendMail(newUser.email, "Your CampusBridge HR Account is Ready!", approveHtml);
 
@@ -672,13 +864,63 @@ exports.addStudentManually = async (req, res) => {
     });
     await newProfile.save();
 
+    const loginUrl = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/login`;
     const emailHtml = `
-      <h2>Welcome to CampusBridge!</h2>
-      <p>Hello ${firstName},</p>
-      <p>Your placement cell has manually registered you.</p>
-      <p><strong>Your Temporary Password:</strong> <span style="background:#f4f4f4;padding:4px 8px;letter-spacing:1px;">${tempPassword}</span></p>
-      <p>Please log in immediately and change your password.</p>
-      <a href="${process.env.CLIENT_URL}/login" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Log In Now</a>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Student Portal</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Welcome to CampusBridge!</h2>
+                    <p style="margin: 0 0 14px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">Hello ${firstName},</p>
+                    <p style="margin: 0 0 20px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      Your placement cell has manually registered you. Use your temporary password below to log in:
+                    </p>
+                    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin: 20px 0; text-align: center;">
+                      <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px;">Temporary Password</div>
+                      <span style="background-color: #FFFFFF; border: 1px solid #CBD5E1; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #049669;">${tempPassword}</span>
+                    </div>
+                    <p style="margin: 0 0 24px 0; font-size: 14px; color: #4B5563; text-align: center;">
+                      Please log in immediately and change your password.
+                    </p>
+                    <div style="text-align: center; margin: 24px 0;">
+                      <a href="${loginUrl}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Log In Now &rarr;</a>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
 
     await NotificationLog.create({
@@ -1046,14 +1288,59 @@ exports.resendHRActivation = async (req, res) => {
     hrUser.activationTokenExpires = tokenExpires;
     await hrUser.save();
 
-    const activationLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${hrUser._id}`;
+    const activationLink = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/setup-password?token=${rawToken}&id=${hrUser._id}`;
     const subject = "Your CampusBridge HR Account Setup Link (Resent)";
     const approveHtml = `
-      <h2>Welcome to CampusBridge!</h2>
-      <p>Here is your new setup link to activate your HR account.</p>
-      <p>Please click the link below to set up your password:</p>
-      <a href="${activationLink}" style="display:inline-block; padding:10px 20px; background-color:#00ED64; color:#0A192F; text-decoration:none; border-radius:5px; font-weight:bold;">Activate Account</a>
-      <p>This link will expire in 24 hours.</p>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Corporate Partner</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Account Setup Link</h2>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      Here is your requested setup link to activate your HR account:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${activationLink}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Activate Account &rarr;</a>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+                      This link will expire in 24 hours.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
 
     const log = new NotificationLog({

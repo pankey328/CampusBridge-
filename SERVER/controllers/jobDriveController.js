@@ -273,9 +273,55 @@ exports.updateJobDrive = async (req, res) => {
 
     if (req.body.status === "REJECTED" && req.body.rejectionReason) {
       const subject = "Job Drive Rejected";
-      const content = `<h3>Job Drive Update</h3><p>Your job drive submission for <b>${jobDrive.title}</b> has been returned by the Placement Cell.</p>
-                       <p><b>Reason:</b> ${req.body.rejectionReason}</p>
-                       <p>Please review the feedback, make the necessary corrections, and resubmit.</p>`;
+      const content = `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+            <tr>
+              <td align="center">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                  <tr>
+                    <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                          <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Job Drive Update</span></td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 32px 32px 28px 32px;">
+                      <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Job Drive Update</h2>
+                      <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                        Your job drive submission for <strong>${jobDrive.title}</strong> has been returned by the Placement Cell.
+                      </p>
+                      <div style="background-color: #FEF2F2; border-left: 4px solid #EF4444; border-radius: 8px; padding: 14px 18px; margin: 20px 0;">
+                        <div style="font-size: 12px; font-weight: 700; color: #991B1B; text-transform: uppercase; margin-bottom: 4px;">Reason:</div>
+                        <div style="font-size: 14px; color: #7F1D1D;">${req.body.rejectionReason}</div>
+                      </div>
+                      <p style="margin: 0; font-size: 13px; color: #6B7280;">
+                        Please review the feedback, make the necessary corrections, and resubmit.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                      <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                        CampusBridge &bull; Placement Operating System<br>
+                        Bridging corporate hiring with student potential.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
       
       const log = new NotificationLog({
         recipientEmail: jobDrive.postedByHR.email,
@@ -308,7 +354,48 @@ exports.updateJobDrive = async (req, res) => {
           await slot.save({ session });
 
           const subject = "Interview Cancelled";
-          const content = `<h3>Interview Cancelled</h3><p>We regret to inform you that the interview and job drive for <b>${jobDrive.title}</b> has been cancelled by the company.</p>`;
+          const content = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                      <tr>
+                        <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                              <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Notice</span></td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 32px 32px 28px 32px;">
+                          <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Interview Cancelled</h2>
+                          <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                            We regret to inform you that the interview and job drive for <strong>${jobDrive.title}</strong> has been cancelled by the company.
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                            CampusBridge &bull; Placement Operating System<br>
+                            Bridging corporate hiring with student potential.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `;
           
           const log = new NotificationLog({
             recipientEmail: slot.studentId.email,
@@ -372,7 +459,48 @@ exports.deleteJobDrive = async (req, res) => {
         slot.status = "CANCELLED";
         await slot.save({ session });
         const subject = "Job Drive Cancelled";
-        const content = `<h3>Job Drive Cancelled</h3><p>We regret to inform you that the job drive for <b>${jobDrive.title}</b> has been deleted by the company.</p>`;
+        const content = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <tr>
+                      <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                            <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Notice</span></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 32px 32px 28px 32px;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Job Drive Cancelled</h2>
+                        <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                          We regret to inform you that the job drive for <strong>${jobDrive.title}</strong> has been deleted by the company.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                          CampusBridge &bull; Placement Operating System<br>
+                          Bridging corporate hiring with student potential.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
 
         const log = new NotificationLog({
           recipientEmail: slot.studentId.email,
@@ -530,18 +658,148 @@ exports.updateApplicationStatus = async (req, res) => {
       let content = '';
       let logType = '';
 
+      const dashboardUrl = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/student/dashboard`;
       if (status === 'REJECTED') {
         subject = 'Update on your Application';
-        content = `<p>Thank you for your interest in the <b>${application.jobDriveId.title}</b> role. We regret to inform you that we will not be moving forward with your application.</p>`;
+        content = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <tr>
+                      <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                            <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Application Status</span></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 32px 32px 28px 32px;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Application Update</h2>
+                        <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                          Thank you for your interest in the <strong>${application.jobDriveId.title}</strong> role. We regret to inform you that we will not be moving forward with your application.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                          CampusBridge &bull; Placement Operating System<br>
+                          Bridging corporate hiring with student potential.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
         logType = 'APPLICATION_REJECTED';
       } else if (status === 'HIRED') {
         subject = 'Congratulations! You have been Selected';
-        content = `<p>Congratulations! You have been selected for the <b>${application.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
+        content = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <tr>
+                      <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                            <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Selected</span></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 32px 32px 28px 32px;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Congratulations!</h2>
+                        <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                          Congratulations! You have been selected for the <strong>${application.jobDriveId.title}</strong> role! The HR team will reach out shortly with your official offer letter and joining details.
+                        </p>
+                        <div style="text-align: center; margin: 24px 0;">
+                          <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">View Dashboard &rarr;</a>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                          CampusBridge &bull; Placement Operating System<br>
+                          Bridging corporate hiring with student potential.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
         logType = 'APPLICATION_HIRED';
         await StudentProfile.findOneAndUpdate({ userId: application.studentId._id }, { isLocked: true });
       } else if (status === 'SHORTLISTED') {
         subject = 'Update on your Application: Shortlisted!';
-        content = `<p>Congratulations! You have been shortlisted for the <b>${application.jobDriveId.title}</b> role! Please stay tuned for further updates regarding the next rounds.</p>`;
+        content = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <tr>
+                      <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                            <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Shortlisted</span></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 32px 32px 28px 32px;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">You're Shortlisted!</h2>
+                        <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                          Congratulations! You have been shortlisted for the <strong>${application.jobDriveId.title}</strong> role! Please stay tuned for further updates regarding the next rounds.
+                        </p>
+                        <div style="text-align: center; margin: 24px 0;">
+                          <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Track Application &rarr;</a>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                          CampusBridge &bull; Placement Operating System<br>
+                          Bridging corporate hiring with student potential.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
         logType = 'APPLICATION_SHORTLISTED';
       }
 
@@ -602,18 +860,148 @@ exports.bulkUpdateApplicationStatus = async (req, res) => {
         let content = '';
         let logType = '';
 
+        const dashboardUrl = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/student/dashboard`;
         if (status === 'REJECTED') {
           subject = 'Update on your Application';
-          content = `<p>Thank you for your interest in the <b>${app.jobDriveId.title}</b> role. We regret to inform you that we will not be moving forward with your application.</p>`;
+          content = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                      <tr>
+                        <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                              <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Application Status</span></td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 32px 32px 28px 32px;">
+                          <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Application Update</h2>
+                          <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                            Thank you for your interest in the <strong>${app.jobDriveId.title}</strong> role. We regret to inform you that we will not be moving forward with your application.
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                            CampusBridge &bull; Placement Operating System<br>
+                            Bridging corporate hiring with student potential.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `;
           logType = 'APPLICATION_REJECTED';
         } else if (status === 'HIRED') {
           subject = 'Congratulations! You have been Selected';
-          content = `<p>Congratulations! You have been selected for the <b>${app.jobDriveId.title}</b> role! The HR team will reach out shortly with your official offer letter and joining details.</p>`;
+          content = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                      <tr>
+                        <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                              <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Selected</span></td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 32px 32px 28px 32px;">
+                          <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Congratulations!</h2>
+                          <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                            Congratulations! You have been selected for the <strong>${app.jobDriveId.title}</strong> role! The HR team will reach out shortly with your official offer letter and joining details.
+                          </p>
+                          <div style="text-align: center; margin: 24px 0;">
+                            <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">View Dashboard &rarr;</a>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                            CampusBridge &bull; Placement Operating System<br>
+                            Bridging corporate hiring with student potential.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `;
           logType = 'APPLICATION_HIRED';
           await StudentProfile.findOneAndUpdate({ userId: app.studentId._id }, { isLocked: true });
         } else if (status === 'SHORTLISTED') {
           subject = 'Update on your Application: Shortlisted!';
-          content = `<p>Congratulations! You have been shortlisted for the <b>${app.jobDriveId.title}</b> role! Please stay tuned for further updates regarding the next rounds.</p>`;
+          content = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                      <tr>
+                        <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                          <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                              <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Shortlisted</span></td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 32px 32px 28px 32px;">
+                          <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">You're Shortlisted!</h2>
+                          <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                            Congratulations! You have been shortlisted for the <strong>${app.jobDriveId.title}</strong> role! Please stay tuned for further updates regarding the next rounds.
+                          </p>
+                          <div style="text-align: center; margin: 24px 0;">
+                            <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Track Application &rarr;</a>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                          <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                            CampusBridge &bull; Placement Operating System<br>
+                            Bridging corporate hiring with student potential.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `;
           logType = 'APPLICATION_SHORTLISTED';
         }
 
@@ -674,7 +1062,48 @@ exports.completeJobDrive = async (req, res) => {
 
       for (const app of pendingApps) {
         const subject = 'Update on your Application';
-        const content = `<p>Thank you for your interest in the <b>${jobDrive.title}</b> role. The recruitment process for this drive has concluded, and we regret to inform you that we will not be moving forward with your application.</p>`;
+        const content = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+              <tr>
+                <td align="center">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <tr>
+                      <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td><span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span></td>
+                            <td align="right"><span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">Application Status</span></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 32px 32px 28px 32px;">
+                        <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Application Update</h2>
+                        <p style="margin: 0 0 16px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                          Thank you for your interest in the <strong>${jobDrive.title}</strong> role. The recruitment process for this drive has concluded, and we regret to inform you that we will not be moving forward with your application.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                          CampusBridge &bull; Placement Operating System<br>
+                          Bridging corporate hiring with student potential.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `;
 
         const log = new NotificationLog({
           recipientEmail: app.studentId.email,

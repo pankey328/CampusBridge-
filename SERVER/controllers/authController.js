@@ -138,10 +138,58 @@ exports.forgotPassword = async (req, res) => {
 
     const { sendMail } = require("../utils/emailUtils");
     const emailHtml = `
-      <h2>CampusBridge Password Reset</h2>
-      <p>You requested a password reset. Here is your 6-digit OTP:</p>
-      <h3 style="background: #f4f4f4; padding: 10px; width: fit-content; letter-spacing: 2px;">${otp}</h3>
-      <p>This OTP will expire in 10 minutes.</p>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Security</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Password Reset OTP</h2>
+                    <p style="margin: 0 0 20px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      You requested a password reset for your CampusBridge account. Use the one-time verification code below to set a new password:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <div style="display: inline-block; background-color: #F0FDF4; border: 2px dashed #049669; border-radius: 14px; padding: 16px 36px;">
+                        <span style="font-family: monospace, 'Plus Jakarta Sans', sans-serif; font-size: 34px; font-weight: 800; color: #034D35; letter-spacing: 8px;">${otp}</span>
+                      </div>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+                      This code is valid for <strong>10 minutes</strong>. If you did not request this reset, you can safely ignore this email.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
     `;
     await sendMail(email, "Your Password Reset OTP", emailHtml);
 

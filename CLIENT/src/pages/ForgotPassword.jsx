@@ -1,26 +1,40 @@
 import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import api from "../services/api";
+
 import toast from "react-hot-toast";
+
 import { ArrowRight, ArrowLeft } from "lucide-react";
+
 import Logo from "./Logo";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
+
   const [email, setEmail] = useState("");
+
   const [otp, setOtp] = useState("");
+
   const [newPassword, setNewPassword] = useState("");
+
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+
     setIsLoading(true);
+
     try {
       await api.post("/auth/forgot-password", { email });
+
       toast.success("An OTP has been sent to your email.");
+
       setStep(2);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send OTP.");
@@ -31,20 +45,28 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+
     if (newPassword !== confirmNewPassword) {
       toast.error("Passwords do not match!");
+
       return;
     }
 
     setIsLoading(true);
+
     try {
       await api.post("/auth/verify-otp-and-reset", {
         email,
+
         otp,
+
         newPassword,
+
         confirmNewPassword,
       });
+
       toast.success("Password successfully reset! You can now log in.");
+
       navigate("/login");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to reset password.");
@@ -60,12 +82,15 @@ const ForgotPassword = () => {
       </div>
 
       {/* Main Card */}
+
       <div className="w-full max-w-[420px] bg-white dark:bg-slate-800 rounded-xl p-8 sm:px-10 shadow-sm border border-gray-200 dark:border-slate-700 transition-all duration-300">
         {/* Header */}
+
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold text-[#121212] dark:text-white mb-1">
             Password Recovery
           </h2>
+
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
             {step === 1
               ? "Enter your registered email to receive an OTP."
@@ -79,6 +104,7 @@ const ForgotPassword = () => {
               <label className="block text-sm font-bold text-[#121212] dark:text-gray-200 mb-1.5">
                 Email address <span className="text-red-500">*</span>
               </label>
+
               <input
                 type="email"
                 required
@@ -97,11 +123,13 @@ const ForgotPassword = () => {
               {isLoading ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white dark:border-[#034D35] border-t-transparent rounded-full animate-spin"></div>
+
                   <span>Sending OTP...</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5">
                   <span>Send Recovery OTP</span>
+
                   <ArrowRight size={16} />
                 </div>
               )}
@@ -113,6 +141,7 @@ const ForgotPassword = () => {
               <label className="block text-sm font-bold text-[#121212] dark:text-gray-200 mb-1.5">
                 6-Digit OTP <span className="text-red-500">*</span>
               </label>
+
               <input
                 type="text"
                 required
@@ -128,6 +157,7 @@ const ForgotPassword = () => {
               <label className="block text-sm font-bold text-[#121212] dark:text-gray-200 mb-1.5">
                 New password <span className="text-red-500">*</span>
               </label>
+
               <input
                 type="password"
                 required
@@ -142,6 +172,7 @@ const ForgotPassword = () => {
               <label className="block text-sm font-bold text-[#121212] dark:text-gray-200 mb-1.5">
                 Confirm new password <span className="text-red-500">*</span>
               </label>
+
               <input
                 type="password"
                 required
@@ -156,6 +187,7 @@ const ForgotPassword = () => {
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
               />
+
               {newPassword &&
                 confirmNewPassword &&
                 newPassword !== confirmNewPassword && (
@@ -177,6 +209,7 @@ const ForgotPassword = () => {
               {isLoading ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white dark:border-[#034D35] border-t-transparent rounded-full animate-spin"></div>
+
                   <span>Resetting Password...</span>
                 </div>
               ) : (
@@ -187,7 +220,6 @@ const ForgotPassword = () => {
         )}
       </div>
 
-      {/* Footer Navigation - Positioned Outside the Card */}
       <div className="mt-8 flex justify-center text-sm">
         <button
           onClick={() => navigate("/login")}

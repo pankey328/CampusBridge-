@@ -94,12 +94,65 @@ exports.createTPO = async (req, res) => {
     });
     await newProfile.save({ session });
 
-    const setupLink = `${process.env.CLIENT_URL}/setup-password?token=${rawToken}&id=${savedUser._id}`;
+    const setupLink = `${process.env.CLIENT_URL || "https://campus-bridge-three.vercel.app"}/setup-password?token=${rawToken}&id=${savedUser._id}`;
+    const content = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin: 0; padding: 0; background-color: #F9F7F1; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F9F7F1; padding: 30px 12px;">
+          <tr>
+            <td align="center">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                <tr>
+                  <td style="background-color: #B6F596; padding: 24px 32px; border-bottom: 1px solid rgba(3, 77, 53, 0.1);">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="font-size: 24px; font-weight: 800; color: #034D35; letter-spacing: -1px;">CampusBridge</span>
+                        </td>
+                        <td align="right">
+                          <span style="background-color: rgba(3, 77, 53, 0.12); color: #034D35; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">Placement Officer</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 32px 28px 32px;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #121212;">Welcome to CampusBridge!</h2>
+                    <p style="margin: 0 0 14px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">Hello ${name},</p>
+                    <p style="margin: 0 0 20px 0; font-size: 15px; color: #4B5563; line-height: 1.6;">
+                      You have been invited as a Training and Placement Officer on CampusBridge. Please click the button below to set up your password and access your dashboard:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${setupLink}" style="display: inline-block; padding: 14px 32px; background-color: #121212; color: #FFFFFF; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(18,18,18,0.15);">Set Up TPO Account &rarr;</a>
+                    </div>
+                    <p style="margin: 0; font-size: 13px; color: #6B7280; text-align: center;">
+                      This link will expire in 24 hours.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #FAFAF9; padding: 20px 32px; border-top: 1px solid #F3F4F6; text-align: center;">
+                    <p style="margin: 0; font-size: 12px; color: #9CA3AF; line-height: 1.5;">
+                      CampusBridge &bull; Placement Operating System<br>
+                      Bridging corporate hiring with student potential.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
 
     await NotificationLog.create([{
       recipientEmail: email,
       subject: "Welcome to CampusBridge - Setup your TPO Account",
-      content: `Hello ${name},\n\nYou have been invited as a Training and Placement Officer on CampusBridge.\nPlease click the link below to set up your password:\n\n${setupLink}\n\nThis link will expire in 24 hours.`,
+      content,
       type: "WELCOME",
       status: "PENDING",
     }], { session });
