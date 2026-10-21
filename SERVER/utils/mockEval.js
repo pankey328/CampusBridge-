@@ -27,22 +27,26 @@ Respond ONLY with a raw JSON object (no markdown, no preamble) in the following 
   "rating": <0-5>,
   "followUp": "Optional follow-up question or null"
 }`;
-  const response = await callGroq(prompt);
-  const cleanResponse = response.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  try {
+    const response = await callGroq(prompt);
+    const cleanResponse = response.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-  const jsonMatch = cleanResponse.match(/\{[\s\S]*?\}/);
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        rating: typeof parsed.rating === 'number' ? Math.round(parsed.rating) : 0,
-        followUp: parsed.followUp && typeof parsed.followUp === 'string' && parsed.followUp.trim().length > 0 ? parsed.followUp.trim() : null,
-      };
-    } catch (e) {
-      console.error('Failed to parse evaluateAnswer JSON:', e, response);
+    const jsonMatch = cleanResponse.match(/\{[\s\S]*?\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          rating: typeof parsed.rating === 'number' ? Math.round(parsed.rating) : 3,
+          followUp: parsed.followUp && typeof parsed.followUp === 'string' && parsed.followUp.trim().length > 0 ? parsed.followUp.trim() : null,
+        };
+      } catch (e) {
+        console.error('Failed to parse evaluateAnswer JSON:', e, response);
+      }
     }
+  } catch (err) {
+    console.error('evaluateAnswer callGroq error:', err.message || err);
   }
-  return { rating: 0, followUp: null };
+  return { rating: 3, followUp: null };
 }
 
 // Placeholder for generating a follow‑up question independently

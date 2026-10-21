@@ -11,7 +11,7 @@ const callGroq = async (prompt) => {
   const url = "https://api.groq.com/openai/v1/chat/completions";
 
   const payload = {
-    model: "qwen/qwen3.6-27b",
+    model: "qwen/qwen3.8-27b",
     messages: [
       {
         role: "user",
@@ -157,18 +157,22 @@ Ensure "overallScore" is a number between 0 and 100.
 Double check that the JSON is fully valid and parseable.
   `;
 
-  const reportText = await callGroq(prompt);
-  const cleanText = reportText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-  
-  const jsonObjectMatch = cleanText.match(/\{[\s\S]*\}/);
-  if (jsonObjectMatch) {
-    try {
-      return JSON.parse(jsonObjectMatch[0]);
-    } catch (err) {
-      console.error("Failed to parse matched Groq evaluation JSON object. Matched text was:", jsonObjectMatch[0]);
+  try {
+    const reportText = await callGroq(prompt);
+    const cleanText = reportText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    
+    const jsonObjectMatch = cleanText.match(/\{[\s\S]*\}/);
+    if (jsonObjectMatch) {
+      try {
+        return JSON.parse(jsonObjectMatch[0]);
+      } catch (err) {
+        console.error("Failed to parse matched Groq evaluation JSON object. Matched text was:", jsonObjectMatch[0]);
+      }
+    } else {
+      console.error("No JSON object bracket found in Groq evaluation response. Raw output was:", reportText);
     }
-  } else {
-    console.error("No JSON object bracket found in Groq evaluation response. Raw output was:", reportText);
+  } catch (groqErr) {
+    console.error("evaluateInterview callGroq error:", groqErr.message || groqErr);
   }
 
   return {

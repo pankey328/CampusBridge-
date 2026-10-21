@@ -4,7 +4,7 @@ const rateLimit = require("express-rate-limit");
 const authController = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 
-// Rate limit
+// Rate limit 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5,
