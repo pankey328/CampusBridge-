@@ -11,6 +11,7 @@ import {
   Moon,
   UserCircle,
   Sparkles,
+  LifeBuoy,
   Menu,
   X,
 } from "lucide-react";
@@ -53,6 +54,11 @@ const StudentLayout = () => {
       path: "/student/practice",
       icon: <Sparkles size={18} />,
       label: "AI Technical Practice",
+    },
+    {
+      path: "/student/support",
+      icon: <LifeBuoy size={18} />,
+      label: "AI Grievance & Help",
     },
     {
       path: "/student/profile",

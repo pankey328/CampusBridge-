@@ -20,8 +20,20 @@ import {
   Database,
   Cpu,
   AlertCircle,
+  LifeBuoy,
 } from "lucide-react";
 import api from "../../services/api";
+
+const formatSafeDate = (dateVal) => {
+  if (!dateVal) return null;
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -143,6 +155,13 @@ const StudentDashboard = () => {
             >
               <FileText size={16} />
               <span>Update Profile</span>
+            </button>
+            <button
+              onClick={() => navigate("/student/support")}
+              className="bg-[#034D35]/10 hover:bg-[#034D35]/20 text-[#034D35] dark:bg-[#B6F596]/15 dark:hover:bg-[#B6F596]/25 dark:text-[#B6F596] px-5 py-3 rounded-full transition-all font-bold text-sm flex items-center gap-2 shadow-sm border border-[#034D35]/20 dark:border-[#B6F596]/30"
+            >
+              <LifeBuoy size={16} />
+              <span>AI Grievance & Support</span>
             </button>
           </div>
         </div>
@@ -315,10 +334,10 @@ const StudentDashboard = () => {
                             <MapPin size={16} /> {drive.location}
                           </span>
                         )}
-                        {drive.deadline && (
+                        {formatSafeDate(drive.deadline) && (
                           <span className="flex items-center gap-1.5">
                             <Clock size={16} /> Ends:{" "}
-                            {new Date(drive.deadline).toLocaleDateString()}
+                            {formatSafeDate(drive.deadline)}
                           </span>
                         )}
                       </div>

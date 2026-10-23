@@ -14,6 +14,7 @@ import {
   Moon,
   Mail,
   UserPlus,
+  LifeBuoy,
   Menu,
   X,
 } from "lucide-react";
@@ -81,6 +82,12 @@ const AdminLayout = () => {
     });
   }
 
+  navItems.push({
+    path: `${basePath}/complaints`,
+    icon: <LifeBuoy size={18} />,
+    label: "AI Complaint Hub",
+    end: true,
+  });
   navItems.push({
     path: `${basePath}/notifications`,
     icon: <Mail size={18} />,

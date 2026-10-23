@@ -13,6 +13,13 @@ import {
 import api from "../../services/api";
 import toast from "react-hot-toast";
 
+const formatSafeDate = (dateVal) => {
+  if (!dateVal) return "TBD";
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return "TBD";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
 const JobDrives = () => {
   const [drives, setDrives] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +164,7 @@ const JobDrives = () => {
                       className="mr-2 text-gray-400 dark:text-gray-500"
                     />
                     <span>
-                      Deadline: {new Date(drive.deadline).toLocaleDateString()}
+                      Deadline: {formatSafeDate(drive.deadline)}
                     </span>
                   </div>
                 </div>
@@ -252,7 +259,7 @@ const JobDrives = () => {
                     Deadline
                   </p>
                   <p className="font-extrabold text-red-600 dark:text-red-400 text-sm">
-                    {new Date(selectedDrive.deadline).toLocaleDateString()}
+                    {formatSafeDate(selectedDrive.deadline)}
                   </p>
                 </div>
               </div>

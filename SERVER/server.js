@@ -58,6 +58,10 @@ app.use("/api/mock", mockRoutes);
 const aiRoutes = require("./routes/aiRoutes");
 app.use("/api/ai", aiRoutes);
 
+// AI Complaint & Grievance Routes
+const complaintRoutes = require("./routes/complaintRoutes");
+app.use("/api/complaints", complaintRoutes);
+
 // Fallback 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "API route not found" });

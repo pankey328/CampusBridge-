@@ -34,6 +34,8 @@ import StudentJobDrives from "./pages/student/JobDrives";
 import MyApplications from "./pages/student/MyApplications";
 import StudentProfile from "./pages/student/StudentProfile";
 import AIPractice from "./pages/student/AIPractice";
+import StudentSupport from "./pages/student/StudentSupport";
+import ComplaintHub from "./pages/admin/ComplaintHub";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
@@ -72,6 +74,7 @@ function App() {
                 element={<DriveApplications />}
               />
               <Route path="tpos" element={<TPOManagement />} />
+              <Route path="complaints" element={<ComplaintHub />} />
               <Route path="notifications" element={<NotificationLogs />} />
               <Route path="settings" element={<Settings />} />
             </Route>
@@ -97,6 +100,7 @@ function App() {
                 path="job-drives/:id/applications"
                 element={<DriveApplications />}
               />
+              <Route path="complaints" element={<ComplaintHub />} />
               <Route path="notifications" element={<NotificationLogs />} />
               <Route path="settings" element={<Settings />} />
             </Route>
@@ -116,6 +120,7 @@ function App() {
               <Route path="applications" element={<MyApplications />} />
               <Route path="profile" element={<StudentProfile />} />
               <Route path="practice" element={<AIPractice />} />
+              <Route path="support" element={<StudentSupport />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Route>

@@ -14,6 +14,13 @@ import {
 import api from "../../services/api";
 import toast from "react-hot-toast";
 
+const formatSafeDate = (dateVal) => {
+  if (!dateVal) return "";
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -201,7 +208,7 @@ const MyApplications = () => {
                         />
                         <span>
                           Applied:{" "}
-                          {new Date(app.createdAt).toLocaleDateString()}
+                          {formatSafeDate(app.createdAt)}
                         </span>
                       </div>
                     </div>
